@@ -73,13 +73,22 @@ function ensureDirs() {
   [DOCS_DIR, ASSETS_DIR, SIG_DIR].forEach(d => fs.mkdirSync(d, { recursive: true }));
 }
 
+// Crop par personne : 'top' garde le haut (visages des portraits debout).
+// Override possible si une photo a un cadrage particulier.
+const CROP_POSITION = {
+  yann: 'top', jacques: 'top', clement: 'top', florian: 'top',
+  anne: 'top', veronique: 'top',
+  sonia: 'top', eulalie: 'top', sidonie: 'top',
+  alexandre: 'top'
+};
+
 async function buildPhotos() {
   for (const [id, num] of Object.entries(PHOTO_MAP)) {
     const src = path.join(SRC_DIR, `2025.12 Noe-l Karre-prod&Co-${num}.jpg`);
     const dst = path.join(ASSETS_DIR, `photo-${id}.jpg`);
     await sharp(src)
       .rotate()
-      .resize(192, 192, { fit: 'cover', position: 'attention' })
+      .resize(192, 192, { fit: 'cover', position: CROP_POSITION[id] || 'top' })
       .grayscale()
       .jpeg({ quality: 85, mozjpeg: true })
       .toFile(dst);
