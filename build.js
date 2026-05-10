@@ -45,8 +45,8 @@ const BRANDS = {
 // ----- MAPPING photo source -----
 const PHOTO_MAP = {
   yann: '110', jacques: '64', clement: '70', florian: '89',
-  anne: '49', veronique: '28',
-  sonia: '19', eulalie: '41', sidonie: '59',
+  anne: '49', veronique: '41',
+  sonia: '19', eulalie: '28', sidonie: '59',
   alexandre: '74'
 };
 
