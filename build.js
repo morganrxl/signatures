@@ -26,7 +26,7 @@ const BRANDS = {
     id: 'KP', name: 'Karré Production',
     site: 'karreprod.com', siteUrl: 'https://www.karreprod.com',
     linkedin: 'https://www.linkedin.com/company/karreprod',
-    reviewUrl: 'https://g.page/r/CTvFPlA-iv5oEAI/review',
+    reviewUrl: 'https://g.page/r/CVx3cb3BazfdEBM/review',
     reviewMsg: 'Vous aimez travailler avec nous — Partagez votre expérience',
     accent: '#EC6908', accentPale: '#FBD8B8',
     logoFile: 'logo_kp_fixed.svg', logoWidth: 135, labels: true
@@ -35,7 +35,7 @@ const BRANDS = {
     id: 'PS', name: 'Piano Service',
     site: 'pianoservice.fr', siteUrl: 'https://www.pianoservice.fr',
     linkedin: 'https://www.linkedin.com/company/piano-service',
-    reviewUrl: 'https://g.page/r/CSe3lvuMAYYQEAI/review',
+    reviewUrl: 'https://g.page/r/CbqoLnVueb81EBM/review',
     reviewMsg: 'Vous aimez travailler avec nous — Partagez votre expérience',
     accent: '#E20E18', accentPale: '#F8C7CA',
     logoFile: 'LOGO-COMPLET-PS_fixed.svg', logoWidth: 210, labels: false
