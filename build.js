@@ -146,13 +146,22 @@ async function buildBadges() {
 // HTML GENERATION
 // =========================================================================
 
+// Style image verrouillé : empêche tout client mail (Gmail iOS, Outlook mobile…)
+// de redimensionner / déformer l'image. !important bat les CSS injectées par le client.
+function lockedImgStyle(w, h, extra = '') {
+  return `display:block;border:0;outline:0;text-decoration:none;`
+       + `width:${w}px !important;height:${h}px !important;`
+       + `min-width:${w}px;max-width:${w}px;min-height:${h}px;max-height:${h}px;`
+       + extra;
+}
+
 function labelsStripHtml(badges, gap = 18) {
   const items = [
     { src: `${BASE_URL}/assets/cert-ecovadis.png`, w: badges.ecovadis.w, h: badges.ecovadis.h, alt: 'EcoVadis' },
     { src: `${BASE_URL}/assets/label-event.png`,    w: badges.label.w,    h: badges.label.h,    alt: 'Le Label' },
     { src: `${BASE_URL}/assets/logo-synpase.png`,   w: badges.synpase.w,  h: badges.synpase.h,  alt: 'Synpase' }
   ];
-  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;"><tr>${items.map((it, i) => `<td valign="middle" style="padding:0 ${i === items.length - 1 ? 0 : gap}px 0 0;"><img src="${it.src}" width="${it.w}" height="${it.h}" alt="${it.alt}" style="display:block;border:0;width:${it.w}px;height:${it.h}px;" /></td>`).join('')}</tr></table>`;
+  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;"><tr>${items.map((it, i) => `<td valign="middle" style="padding:0 ${i === items.length - 1 ? 0 : gap}px 0 0;"><img src="${it.src}" width="${it.w}" height="${it.h}" alt="${it.alt}" style="${lockedImgStyle(it.w, it.h)}" /></td>`).join('')}</tr></table>`;
 }
 
 function buildEditorial(m, brand, logoDims, badges) {
@@ -165,13 +174,18 @@ function buildEditorial(m, brand, logoDims, badges) {
   const lastName = m.nom.split(' ').slice(1).join(' ');
   const titleFamily = "'Avenir Next','Avenir',Helvetica,Arial,sans-serif";
 
-  const photoBlock = `<td valign="top" style="padding:0 26px 0 0;width:108px;"><img src="${photoUrl}" width="96" height="96" alt="${m.nom}" style="display:block;border:0;width:96px;height:96px;border-radius:96px;" /></td>`;
+  // Largeur fixe du bloc signature : empêche les clients mail mobile de
+  // l'écraser sur la quote (overlap reply) et garantit que les images
+  // gardent leur taille (pas de redistribution proportionnelle des cellules).
+  const SIG_WIDTH = 620;
+
+  const photoBlock = `<td valign="top" style="padding:0 26px 0 0;width:108px;min-width:108px;"><img src="${photoUrl}" width="96" height="96" alt="${m.nom}" style="${lockedImgStyle(96, 96, 'border-radius:96px;')}" /></td>`;
 
   const labelsRow = brand.labels
     ? `<tr><td colspan="3" style="padding:14px 0;border-top:1px solid ${accentPale};border-bottom:1px solid ${accentPale};">${labelsStripHtml(badges)}</td></tr>`
     : `<tr><td colspan="3" style="padding:0;border-top:1px solid ${accentPale};">&nbsp;</td></tr>`;
 
-  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:14px;line-height:1.45;">
+  const inner = `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${SIG_WIDTH}" style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:14px;line-height:1.45;width:${SIG_WIDTH}px;min-width:${SIG_WIDTH}px;table-layout:fixed;">
   <tr>
     ${photoBlock}
     <td valign="top" style="padding:0 30px 0 0;border-right:1px solid ${accent};">
@@ -184,8 +198,8 @@ function buildEditorial(m, brand, logoDims, badges) {
         <a href="${brand.siteUrl}" style="color:#1a1a1a;text-decoration:none;font-weight:600;">${brand.site}</a> · <a href="${brand.linkedin}" style="color:#1a1a1a;text-decoration:none;font-weight:600;">LinkedIn</a>
       </div>
     </td>
-    <td valign="middle" align="center" style="padding:0 0 0 26px;width:${logoW + 10}px;text-align:center;">
-      <img src="${logoUrl}" width="${logoW}" height="${logoH}" alt="${brand.name}" style="display:block;border:0;width:${logoW}px;height:${logoH}px;margin:0 auto;" />
+    <td valign="middle" align="center" style="padding:0 0 0 26px;width:${logoW + 10}px;min-width:${logoW + 10}px;text-align:center;">
+      <img src="${logoUrl}" width="${logoW}" height="${logoH}" alt="${brand.name}" style="${lockedImgStyle(logoW, logoH, 'margin:0 auto;')}" />
     </td>
   </tr>
   <tr><td colspan="3" style="height:18px;line-height:18px;font-size:0;">&nbsp;</td></tr>
@@ -196,6 +210,12 @@ function buildEditorial(m, brand, logoDims, badges) {
       <a href="${brand.reviewUrl}" style="font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#1a1a1a;text-decoration:none;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border-bottom:2px solid ${accentPale};padding-bottom:2px;margin-left:8px;">→ Laissez votre avis</a>
     </td>
   </tr>
+</table>`;
+
+  // Wrapper extérieur : crée une séparation nette avec le contenu du mail
+  // (corps de réponse ou quote) sur mobile + largeur fixe verrouillée.
+  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${SIG_WIDTH}" style="border-collapse:collapse;width:${SIG_WIDTH}px;min-width:${SIG_WIDTH}px;margin-top:24px;">
+  <tr><td style="padding:20px 0 0;border-top:1px solid #ece6e0;">${inner}</td></tr>
 </table>`;
 }
 
