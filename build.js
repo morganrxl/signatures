@@ -82,24 +82,53 @@ const CROP_POSITION = {
   alexandre: 'top'
 };
 
+// Photo ronde : composite avec un masque SVG <circle> (blend dest-in) pour
+// produire un PNG circulaire à coins transparents. Seule approche fiable :
+// Outlook desktop (Word engine) ignore border-radius. Confirme par Litmus,
+// EmailOnAcid, CodeTwo.
 async function buildPhotos() {
+  const SIZE = 192;
+  const mask = Buffer.from(
+    `<svg width="${SIZE}" height="${SIZE}" xmlns="http://www.w3.org/2000/svg">`
+    + `<circle cx="${SIZE / 2}" cy="${SIZE / 2}" r="${SIZE / 2}" fill="#fff"/>`
+    + `</svg>`
+  );
   for (const [id, num] of Object.entries(PHOTO_MAP)) {
     const src = path.join(SRC_DIR, `2025.12 Noe-l Karre-prod&Co-${num}.jpg`);
-    const dst = path.join(ASSETS_DIR, `photo-${id}.jpg`);
+    const dst = path.join(ASSETS_DIR, `photo-${id}.png`);
     await sharp(src)
       .rotate()
-      .resize(192, 192, { fit: 'cover', position: CROP_POSITION[id] || 'top' })
+      .resize(SIZE, SIZE, { fit: 'cover', position: CROP_POSITION[id] || 'top' })
       .grayscale()
-      .jpeg({ quality: 85, mozjpeg: true })
+      .composite([{ input: mask, blend: 'dest-in' }])
+      .png({ compressionLevel: 9, adaptiveFiltering: true })
       .toFile(dst);
-    console.log(`  photo-${id}.jpg OK`);
+    console.log(`  photo-${id}.png OK`);
+  }
+  // Cleanup d'anciens fichiers .jpg pour éviter de servir du contenu obsolète.
+  for (const id of Object.keys(PHOTO_MAP)) {
+    const oldJpg = path.join(ASSETS_DIR, `photo-${id}.jpg`);
+    if (fs.existsSync(oldJpg)) fs.unlinkSync(oldJpg);
   }
 }
 
-// Convert SVG/img source to PNG @2x at given display width, return real display dims.
+// Convert SVG/img source to PNG @2x at given display OUTER width, return real display dims.
+// Cuit un padding blanc OPAQUE autour du logo : pixels blancs réels que les
+// modes sombres (Gmail iOS, Outlook iOS partial dark) ne peuvent pas inverser
+// — protection ultime du logo en dark mode (verdict A+B).
 async function svgToPng(srcFile, dstFile, displayWidth) {
+  const PAD = 14; // px de padding @1x sur chaque côté
+  const innerWidth = Math.max(1, (displayWidth - PAD * 2) * 2);
   const out = await sharp(path.join(SRC_DIR, srcFile), { density: 600 })
-    .resize({ width: displayWidth * 2 })
+    .resize({ width: innerWidth })
+    .flatten({ background: { r: 255, g: 255, b: 255 } })
+    .extend({
+      top: PAD * 2,
+      bottom: PAD * 2,
+      left: PAD * 2,
+      right: PAD * 2,
+      background: { r: 255, g: 255, b: 255, alpha: 1 },
+    })
     .png({ compressionLevel: 9 })
     .toFile(path.join(ASSETS_DIR, dstFile));
   return { width: Math.round(out.width / 2), height: Math.round(out.height / 2) };
@@ -114,12 +143,17 @@ async function buildLogos() {
   return dims;
 }
 
+// Badges : flatten sur fond blanc pour que les pixels transparents deviennent
+// blancs opaques (donc inviolables par dark mode). Pas de padding ajouté
+// pour préserver la hauteur 38px de la strip.
 async function buildBadges() {
   const SIZE = 38;
+  const WHITE = { r: 255, g: 255, b: 255 };
   const dims = {};
   // EcoVadis (carré)
   await sharp(path.join(SRC_DIR, 'cert-ecovadis.svg'), { density: 600 })
-    .resize({ height: SIZE * 2, width: SIZE * 2, fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 0 } })
+    .resize({ height: SIZE * 2, width: SIZE * 2, fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
+    .flatten({ background: WHITE })
     .png()
     .toFile(path.join(ASSETS_DIR, 'cert-ecovadis.png'));
   dims.ecovadis = { w: SIZE, h: SIZE };
@@ -127,6 +161,7 @@ async function buildBadges() {
   // Label événement (JPG)
   const labelOut = await sharp(path.join(SRC_DIR, 'Logo-Label-e1499678404115.jpg'))
     .resize({ height: SIZE * 2 })
+    .flatten({ background: WHITE })
     .toFormat('png')
     .toFile(path.join(ASSETS_DIR, 'label-event.png'));
   dims.label = { w: Math.round(labelOut.width / 2), h: SIZE };
@@ -134,6 +169,7 @@ async function buildBadges() {
   // Synpase (PNG)
   const synOut = await sharp(path.join(SRC_DIR, 'logo-synpase.png'))
     .resize({ height: SIZE * 2 })
+    .flatten({ background: WHITE })
     .png()
     .toFile(path.join(ASSETS_DIR, 'logo-synpase.png'));
   dims.synpase = { w: Math.round(synOut.width / 2), h: SIZE };
@@ -161,12 +197,14 @@ function labelsStripHtml(badges, gap = 18) {
     { src: `${BASE_URL}/assets/label-event.png`,    w: badges.label.w,    h: badges.label.h,    alt: 'Le Label' },
     { src: `${BASE_URL}/assets/logo-synpase.png`,   w: badges.synpase.w,  h: badges.synpase.h,  alt: 'Synpase' }
   ];
-  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;"><tr>${items.map((it, i) => `<td valign="middle" style="padding:0 ${i === items.length - 1 ? 0 : gap}px 0 0;"><img src="${it.src}" width="${it.w}" height="${it.h}" alt="${it.alt}" style="${lockedImgStyle(it.w, it.h)}" /></td>`).join('')}</tr></table>`;
+  // bgcolor sur chaque td + background-color CSS : double defense dark mode
+  // (Outlook respecte bgcolor attribut, Apple Mail respecte CSS).
+  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;"><tr>${items.map((it, i) => `<td valign="middle" bgcolor="#ffffff" style="padding:0 ${i === items.length - 1 ? 0 : gap}px 0 0;background-color:#ffffff;"><img src="${it.src}" width="${it.w}" height="${it.h}" alt="${it.alt}" style="${lockedImgStyle(it.w, it.h, 'background-color:#ffffff;')}" /></td>`).join('')}</tr></table>`;
 }
 
 function buildEditorial(m, brand, logoDims, badges) {
   const { accent, accentPale } = brand;
-  const photoUrl = `${BASE_URL}/assets/photo-${m.photoId}.jpg`;
+  const photoUrl = `${BASE_URL}/assets/photo-${m.photoId}.png`;
   const logoUrl = `${BASE_URL}/assets/logo-${brand.id.toLowerCase()}.png`;
   const logoH = logoDims.height;
   const logoW = logoDims.width;
@@ -179,6 +217,9 @@ function buildEditorial(m, brand, logoDims, badges) {
   // gardent leur taille (pas de redistribution proportionnelle des cellules).
   const SIG_WIDTH = 620;
 
+  // Photo : PNG circulaire pre-rendu (coins transparents) — pas besoin de
+  // border-radius. Outlook desktop ignore border-radius mais affichera le
+  // rond car le PNG EST rond.
   const photoBlock = `<td valign="top" style="padding:0 26px 0 0;width:108px;min-width:108px;"><img src="${photoUrl}" width="96" height="96" alt="${m.nom}" style="${lockedImgStyle(96, 96, 'border-radius:96px;')}" /></td>`;
 
   const labelsRow = brand.labels
@@ -198,8 +239,8 @@ function buildEditorial(m, brand, logoDims, badges) {
         <a href="${brand.siteUrl}" style="color:#1a1a1a;text-decoration:none;font-weight:600;">${brand.site}</a> · <a href="${brand.linkedin}" style="color:#1a1a1a;text-decoration:none;font-weight:600;">LinkedIn</a>
       </div>
     </td>
-    <td valign="middle" align="center" style="padding:0 0 0 26px;width:${logoW + 10}px;min-width:${logoW + 10}px;text-align:center;">
-      <img src="${logoUrl}" width="${logoW}" height="${logoH}" alt="${brand.name}" style="${lockedImgStyle(logoW, logoH, 'margin:0 auto;')}" />
+    <td valign="middle" align="center" bgcolor="#ffffff" style="padding:0 0 0 26px;width:${logoW + 10}px;min-width:${logoW + 10}px;text-align:center;background-color:#ffffff;mso-line-height-rule:exactly;">
+      <img src="${logoUrl}" width="${logoW}" height="${logoH}" alt="${brand.name}" style="${lockedImgStyle(logoW, logoH, 'margin:0 auto;background-color:#ffffff;')}" />
     </td>
   </tr>
   <tr><td colspan="3" style="height:18px;line-height:18px;font-size:0;">&nbsp;</td></tr>
@@ -236,7 +277,7 @@ function buildIndex() {
     const b = BRANDS[bid];
     const items = MEMBERS.filter(m => m.brand === bid).map(m => `
       <li style="display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid #ece6e0;">
-        <img src="assets/photo-${m.photoId}.jpg" width="48" height="48" style="border-radius:48px;display:block;" alt="">
+        <img src="assets/photo-${m.photoId}.png" width="48" height="48" style="border-radius:48px;display:block;" alt="">
         <div style="flex:1;">
           <div style="font-weight:600;font-size:15px;color:#1a1a1a;">${m.nom}</div>
           <div style="font-size:12px;color:#666;letter-spacing:0.06em;text-transform:uppercase;margin-top:2px;">${m.role}</div>
