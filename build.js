@@ -143,17 +143,12 @@ async function buildLogos() {
   return dims;
 }
 
-// Badges : flatten sur fond blanc pour que les pixels transparents deviennent
-// blancs opaques (donc inviolables par dark mode). Pas de padding ajouté
-// pour préserver la hauteur 38px de la strip.
 async function buildBadges() {
   const SIZE = 38;
-  const WHITE = { r: 255, g: 255, b: 255 };
   const dims = {};
   // EcoVadis (carré)
   await sharp(path.join(SRC_DIR, 'cert-ecovadis.svg'), { density: 600 })
-    .resize({ height: SIZE * 2, width: SIZE * 2, fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
-    .flatten({ background: WHITE })
+    .resize({ height: SIZE * 2, width: SIZE * 2, fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 0 } })
     .png()
     .toFile(path.join(ASSETS_DIR, 'cert-ecovadis.png'));
   dims.ecovadis = { w: SIZE, h: SIZE };
@@ -161,7 +156,6 @@ async function buildBadges() {
   // Label événement (JPG)
   const labelOut = await sharp(path.join(SRC_DIR, 'Logo-Label-e1499678404115.jpg'))
     .resize({ height: SIZE * 2 })
-    .flatten({ background: WHITE })
     .toFormat('png')
     .toFile(path.join(ASSETS_DIR, 'label-event.png'));
   dims.label = { w: Math.round(labelOut.width / 2), h: SIZE };
@@ -169,7 +163,6 @@ async function buildBadges() {
   // Synpase (PNG)
   const synOut = await sharp(path.join(SRC_DIR, 'logo-synpase.png'))
     .resize({ height: SIZE * 2 })
-    .flatten({ background: WHITE })
     .png()
     .toFile(path.join(ASSETS_DIR, 'logo-synpase.png'));
   dims.synpase = { w: Math.round(synOut.width / 2), h: SIZE };
@@ -197,9 +190,7 @@ function labelsStripHtml(badges, gap = 18) {
     { src: `${BASE_URL}/assets/label-event.png`,    w: badges.label.w,    h: badges.label.h,    alt: 'Le Label' },
     { src: `${BASE_URL}/assets/logo-synpase.png`,   w: badges.synpase.w,  h: badges.synpase.h,  alt: 'Synpase' }
   ];
-  // bgcolor sur chaque td + background-color CSS : double defense dark mode
-  // (Outlook respecte bgcolor attribut, Apple Mail respecte CSS).
-  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;"><tr>${items.map((it, i) => `<td valign="middle" bgcolor="#ffffff" style="padding:0 ${i === items.length - 1 ? 0 : gap}px 0 0;background-color:#ffffff;"><img src="${it.src}" width="${it.w}" height="${it.h}" alt="${it.alt}" style="${lockedImgStyle(it.w, it.h, 'background-color:#ffffff;')}" /></td>`).join('')}</tr></table>`;
+  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;"><tr>${items.map((it, i) => `<td valign="middle" style="padding:0 ${i === items.length - 1 ? 0 : gap}px 0 0;"><img src="${it.src}" width="${it.w}" height="${it.h}" alt="${it.alt}" style="${lockedImgStyle(it.w, it.h)}" /></td>`).join('')}</tr></table>`;
 }
 
 function buildEditorial(m, brand, logoDims, badges) {
