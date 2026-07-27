@@ -119,19 +119,29 @@ async function buildPhotos() {
 async function svgToPng(srcFile, dstFile, displayWidth) {
   const PAD = 14; // px de padding @1x sur chaque côté
   const innerWidth = Math.max(1, (displayWidth - PAD * 2) * 2);
-  const out = await sharp(path.join(SRC_DIR, srcFile), { density: 600 })
+  const srcPath = path.join(SRC_DIR, srcFile);
+
+  // Mesure de la hauteur intermédiaire pour verrouiller un PNG pair.
+  // Sinon out.height impair → display height = round(h/2) → écart sub-pixel
+  // → étirement visible sur logos texte fins (TDN 320x157 → 160x79 étire 0.6%).
+  const meta = await sharp(srcPath, { density: 600 })
+    .resize({ width: innerWidth })
+    .metadata();
+  const heightFix = meta.height % 2 === 1 ? 1 : 0;
+
+  const out = await sharp(srcPath, { density: 600 })
     .resize({ width: innerWidth })
     .flatten({ background: { r: 255, g: 255, b: 255 } })
     .extend({
       top: PAD * 2,
-      bottom: PAD * 2,
+      bottom: PAD * 2 + heightFix,
       left: PAD * 2,
       right: PAD * 2,
       background: { r: 255, g: 255, b: 255, alpha: 1 },
     })
     .png({ compressionLevel: 9 })
     .toFile(path.join(ASSETS_DIR, dstFile));
-  return { width: Math.round(out.width / 2), height: Math.round(out.height / 2) };
+  return { width: out.width / 2, height: out.height / 2 };
 }
 
 async function buildLogos() {
@@ -351,21 +361,98 @@ document.querySelectorAll('button[data-id]').forEach(btn => {
 }
 
 // =========================================================================
+// PATCH & READ existing PNGs (mode HTML_ONLY)
+// =========================================================================
+
+// Ajoute 1 px transparent/blanc (right / bottom) aux PNG dont largeur ou
+// hauteur est impaire. Garantit un display size entier (PNG/2) donc plus de
+// width="115.5" en HTML (invalide, arrondi par le client mail → étirement).
+// Utile quand SRC_DIR est indisponible : on répare les PNG en place.
+async function patchAssetsParity() {
+  // Logos : padding blanc opaque (fond blanc déjà cuit dans le PNG).
+  // Badges : padding transparent (badge ecovadis + logo-synpase = fond alpha).
+  const targets = [
+    { file: 'logo-tdn.png',      bg: { r: 255, g: 255, b: 255, alpha: 1 } },
+    { file: 'logo-kp.png',       bg: { r: 255, g: 255, b: 255, alpha: 1 } },
+    { file: 'logo-ps.png',       bg: { r: 255, g: 255, b: 255, alpha: 1 } },
+    { file: 'cert-ecovadis.png', bg: { r: 255, g: 255, b: 255, alpha: 0 } },
+    { file: 'label-event.png',   bg: { r: 255, g: 255, b: 255, alpha: 1 } },
+    { file: 'logo-synpase.png',  bg: { r: 255, g: 255, b: 255, alpha: 0 } }
+  ];
+  for (const { file, bg } of targets) {
+    const p = path.join(ASSETS_DIR, file);
+    if (!fs.existsSync(p)) continue;
+    const meta = await sharp(p).metadata();
+    const wFix = meta.width  % 2 === 1 ? 1 : 0;
+    const hFix = meta.height % 2 === 1 ? 1 : 0;
+    if (!wFix && !hFix) {
+      console.log(`  ${file}: ${meta.width}x${meta.height} déjà pair`);
+      continue;
+    }
+    const buf = await sharp(p)
+      .extend({ right: wFix, bottom: hFix, background: bg })
+      .png({ compressionLevel: 9 })
+      .toBuffer();
+    fs.writeFileSync(p, buf);
+    console.log(`  ${file}: ${meta.width}x${meta.height} -> ${meta.width + wFix}x${meta.height + hFix}`);
+  }
+}
+
+async function readAssetDims() {
+  const read = async (n) => {
+    const m = await sharp(path.join(ASSETS_DIR, n)).metadata();
+    return { width: m.width / 2, height: m.height / 2 };
+  };
+  const logoDims = {
+    kp: await read('logo-kp.png'),
+    tdn: await read('logo-tdn.png'),
+    ps: await read('logo-ps.png')
+  };
+  const eco = await read('cert-ecovadis.png');
+  const lab = await read('label-event.png');
+  const syn = await read('logo-synpase.png');
+  const badges = {
+    ecovadis: { w: eco.width, h: eco.height },
+    label:    { w: lab.width, h: lab.height },
+    synpase:  { w: syn.width, h: syn.height }
+  };
+  return { logoDims, badges };
+}
+
+// =========================================================================
 // MAIN
 // =========================================================================
 
 (async () => {
+  const HTML_ONLY = process.env.HTML_ONLY === '1';
+  const FIX_PARITY = process.env.FIX_PARITY === '1';
+
   console.log('1. Préparation des dossiers');
   ensureDirs();
 
-  console.log('2. Photos (10) — crop carré 192x192 + grayscale');
-  await buildPhotos();
+  let logoDims, badges;
 
-  console.log('3. Logos marques');
-  const logoDims = await buildLogos();
+  if (HTML_ONLY) {
+    if (FIX_PARITY) {
+      console.log('1b. Patch parité assets (add 1px right/bottom si dim impaire)');
+      await patchAssetsParity();
+    }
+    console.log('2-4. HTML_ONLY=1 -> lecture des dimensions depuis PNG existants');
+    const dims = await readAssetDims();
+    logoDims = dims.logoDims;
+    badges = dims.badges;
+    console.log('  logoDims:', logoDims);
+    console.log('  badges:', badges);
+  } else {
+    console.log('2. Photos (10) — crop carré 192x192 + grayscale');
+    await buildPhotos();
 
-  console.log('4. Badges (EcoVadis + Label + Synpase)');
-  const badges = await buildBadges();
+    console.log('3. Logos marques');
+    logoDims = await buildLogos();
+
+    console.log('4. Badges (EcoVadis + Label + Synpase)');
+    badges = await buildBadges();
+  }
 
   console.log('5. Génération des 11 signatures HTML');
   const dimsByBrand = { KP: logoDims.kp, TDN: logoDims.tdn, PS: logoDims.ps };
