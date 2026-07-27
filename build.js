@@ -217,20 +217,32 @@ function buildEditorial(m, brand, logoDims, badges) {
   // l'écraser sur la quote (overlap reply) et garantit que les images
   // gardent leur taille (pas de redistribution proportionnelle des cellules).
   const SIG_WIDTH = 620;
+  const NCOLS = 4; // photo | texte | separateur | logo (voir separatorCell ci-dessous)
+
+  // Fond blanc CUIT sur chaque cellule : bgcolor + background-color inline.
+  // Gmail Android + Outlook Windows dark mode ne peuvent plus inverser le fond
+  // -> les couleurs texte (#1a1a1a) restent lisibles sur blanc partout.
+  const WHITE_CELL = 'bgcolor="#ffffff"';
+  const WHITE_STYLE = 'background-color:#ffffff;';
 
   // Photo : PNG circulaire pre-rendu (coins transparents) — pas besoin de
   // border-radius. Outlook desktop ignore border-radius mais affichera le
   // rond car le PNG EST rond.
-  const photoBlock = `<td valign="top" style="padding:0 26px 0 0;width:108px;min-width:108px;"><img src="${photoUrl}" width="96" height="96" alt="${m.nom}" style="${lockedImgStyle(96, 96, 'border-radius:96px;')}" /></td>`;
+  const photoBlock = `<td valign="top" ${WHITE_CELL} style="padding:0 26px 0 0;width:108px;min-width:108px;${WHITE_STYLE}"><img src="${photoUrl}" width="96" height="96" alt="${m.nom}" style="${lockedImgStyle(96, 96, 'border-radius:96px;')}" /></td>`;
+
+  // Séparateur vertical : cellule 1px bgcolor accent. Bat border-right qui
+  // se comporte de façon erratique dans Outlook Desktop (moteur Word) :
+  // hauteur incohérente, gap 1px, disparition selon zoom.
+  const separatorCell = `<td width="1" bgcolor="${accent}" style="width:1px;min-width:1px;max-width:1px;background-color:${accent};line-height:1px;font-size:0;">&nbsp;</td>`;
 
   const labelsRow = brand.labels
-    ? `<tr><td colspan="3" style="padding:14px 0;border-top:1px solid ${accentPale};border-bottom:1px solid ${accentPale};">${labelsStripHtml(badges)}</td></tr>`
-    : `<tr><td colspan="3" style="padding:0;border-top:1px solid ${accentPale};">&nbsp;</td></tr>`;
+    ? `<tr><td colspan="${NCOLS}" ${WHITE_CELL} style="padding:14px 0;border-top:1px solid ${accentPale};border-bottom:1px solid ${accentPale};${WHITE_STYLE}">${labelsStripHtml(badges)}</td></tr>`
+    : `<tr><td colspan="${NCOLS}" ${WHITE_CELL} style="padding:0;border-top:1px solid ${accentPale};${WHITE_STYLE}">&nbsp;</td></tr>`;
 
-  const inner = `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${SIG_WIDTH}" style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:14px;line-height:1.45;width:${SIG_WIDTH}px;min-width:${SIG_WIDTH}px;table-layout:fixed;">
+  const inner = `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${SIG_WIDTH}" ${WHITE_CELL} style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:14px;line-height:1.45;width:${SIG_WIDTH}px;min-width:${SIG_WIDTH}px;table-layout:fixed;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;">
   <tr>
     ${photoBlock}
-    <td valign="top" style="padding:0 30px 0 0;border-right:1px solid ${accent};">
+    <td valign="top" ${WHITE_CELL} style="padding:0 30px 0 0;${WHITE_STYLE}">
       <div style="font-family:${titleFamily};font-size:26px;line-height:1.1;color:#0a0a0a;font-weight:800;letter-spacing:0.01em;">${firstName} <span style="font-weight:300;color:#1a1a1a;">${lastName}</span></div>
       <div style="font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#4d4d4c;margin-top:10px;letter-spacing:0.22em;text-transform:uppercase;">${m.role}</div>
       <div style="height:18px;line-height:18px;font-size:0;">&nbsp;</div>
@@ -240,14 +252,15 @@ function buildEditorial(m, brand, logoDims, badges) {
         <a href="${brand.siteUrl}" style="color:#1a1a1a;text-decoration:none;font-weight:600;">${brand.site}</a> · <a href="${brand.linkedin}" style="color:#1a1a1a;text-decoration:none;font-weight:600;">LinkedIn</a>
       </div>
     </td>
-    <td valign="middle" align="center" bgcolor="#ffffff" style="padding:0 0 0 26px;width:${logoW + 10}px;min-width:${logoW + 10}px;text-align:center;background-color:#ffffff;mso-line-height-rule:exactly;">
+    ${separatorCell}
+    <td valign="middle" align="center" ${WHITE_CELL} style="padding:0 0 0 26px;width:${logoW + 10}px;min-width:${logoW + 10}px;text-align:center;${WHITE_STYLE}mso-line-height-rule:exactly;">
       <img src="${logoUrl}" width="${logoW}" height="${logoH}" alt="${brand.name}" style="${lockedImgStyle(logoW, logoH, 'margin:0 auto;background-color:#ffffff;')}" />
     </td>
   </tr>
-  <tr><td colspan="3" style="height:18px;line-height:18px;font-size:0;">&nbsp;</td></tr>
+  <tr><td colspan="${NCOLS}" ${WHITE_CELL} style="height:18px;line-height:18px;font-size:0;${WHITE_STYLE}">&nbsp;</td></tr>
   ${labelsRow}
   <tr>
-    <td colspan="3" style="padding:14px 0 0;">
+    <td colspan="${NCOLS}" ${WHITE_CELL} style="padding:14px 0 0;${WHITE_STYLE}">
       <span style="font-family:${titleFamily};font-weight:300;font-size:13px;color:#1a1a1a;letter-spacing:0.01em;">«&nbsp;${brand.reviewMsg}&nbsp;»</span>
       <a href="${brand.reviewUrl}" style="font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#1a1a1a;text-decoration:none;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border-bottom:2px solid ${accentPale};padding-bottom:2px;margin-left:8px;">→ Laissez votre avis</a>
     </td>
@@ -256,15 +269,31 @@ function buildEditorial(m, brand, logoDims, badges) {
 
   // Wrapper extérieur : crée une séparation nette avec le contenu du mail
   // (corps de réponse ou quote) sur mobile + largeur fixe verrouillée.
-  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${SIG_WIDTH}" style="border-collapse:collapse;width:${SIG_WIDTH}px;min-width:${SIG_WIDTH}px;margin-top:24px;">
-  <tr><td style="padding:20px 0 0;border-top:1px solid #ece6e0;">${inner}</td></tr>
+  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${SIG_WIDTH}" ${WHITE_CELL} style="border-collapse:collapse;width:${SIG_WIDTH}px;min-width:${SIG_WIDTH}px;margin-top:24px;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;">
+  <tr><td ${WHITE_CELL} style="padding:20px 0 0;border-top:1px solid #ece6e0;${WHITE_STYLE}">${inner}</td></tr>
 </table>`;
 }
 
 function wrapStandalone(innerHtml, title) {
+  // meta color-scheme + supported-color-schemes : indique aux clients mail
+  // (Apple Mail, Outlook Mac, iOS Mail) que la signature est designed pour
+  // light mode uniquement. Bloque leur auto-inversion. Gmail Web strippe le
+  // head donc ne l'utilise pas, mais on cuit aussi les bgcolor dans le body
+  // pour Android. Ceinture + bretelles.
   return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head>
-<body style="margin:0;padding:24px;background:#fff;font-family:Helvetica,Arial,sans-serif;">
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
+<title>${title}</title>
+<style>
+  :root { color-scheme: light only; supported-color-schemes: light only; }
+  body { color-scheme: light only; }
+</style>
+</head>
+<body style="margin:0;padding:24px;background:#fff;font-family:Helvetica,Arial,sans-serif;color-scheme:light only;">
 ${innerHtml}
 </body></html>`;
 }
