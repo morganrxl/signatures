@@ -62,7 +62,10 @@ const MEMBERS = [
   { id: 'eulalie',   brand: 'TDN', nom: 'Eulalie BEYSSEN',  role: 'Event Designer',                          email: 'eulalie@tomberdesnues.com', tel: '+33 6 15 08 27 31', photoId: 'eulalie' },
   { id: 'sidonie',   brand: 'TDN', nom: 'Sidonie BRASSART', role: 'Assistante de projet',                    email: 'sidonie@tomberdesnues.com', tel: '+33 7 83 73 95 96', photoId: 'sidonie' },
   { id: 'alexandre', brand: 'PS',  nom: 'Alexandre BILLON', role: 'Directeur Associé',                       email: 'alexandre@pianoservice.fr', tel: '+33 6 80 44 73 52', photoId: 'alexandre' },
-  { id: 'yann-ps',   brand: 'PS',  nom: 'Yann ROUXEL',      role: 'Directeur Général',                       email: 'yann@pianoservice.fr',      tel: '+33 6 27 42 78 20', photoId: 'yann' }
+  { id: 'yann-ps',     brand: 'PS',  nom: 'Yann ROUXEL',      role: 'Directeur Général',                       email: 'yann@pianoservice.fr',      tel: '+33 6 27 42 78 20', photoId: 'yann' },
+  { id: 'justine-tdn', brand: 'TDN', nom: 'Justine',          role: 'Commerciale',                             email: 'justine@tomberdesnues.com', tel: '+33 6 11 48 94 37', photo: false },
+  { id: 'justine-kp',  brand: 'KP',  nom: 'Justine',          role: 'Commerciale',                             email: 'justine@karreprod.com',     tel: '+33 6 11 48 94 37', photo: false },
+  { id: 'justine-ps',  brand: 'PS',  nom: 'Justine',          role: 'Commerciale',                             email: 'justine@pianoservice.fr',   tel: '+33 6 11 48 94 37', photo: false }
 ];
 
 // =========================================================================
@@ -217,7 +220,9 @@ function buildEditorial(m, brand, logoDims, badges) {
   // l'écraser sur la quote (overlap reply) et garantit que les images
   // gardent leur taille (pas de redistribution proportionnelle des cellules).
   const SIG_WIDTH = 620;
-  const NCOLS = 4; // photo | texte | separateur | logo (voir separatorCell ci-dessous)
+  const hasPhoto = m.photo !== false;
+  const NCOLS = hasPhoto ? 4 : 3; // photo? | texte | separateur | logo
+  const hasLastName = lastName.length > 0;
 
   // Fond blanc CUIT sur chaque cellule : bgcolor + background-color inline.
   // Gmail Android + Outlook Windows dark mode ne peuvent plus inverser le fond
@@ -227,8 +232,15 @@ function buildEditorial(m, brand, logoDims, badges) {
 
   // Photo : PNG circulaire pre-rendu (coins transparents) — pas besoin de
   // border-radius. Outlook desktop ignore border-radius mais affichera le
-  // rond car le PNG EST rond.
-  const photoBlock = `<td valign="top" ${WHITE_CELL} style="padding:0 26px 0 0;width:108px;min-width:108px;${WHITE_STYLE}"><img src="${photoUrl}" width="96" height="96" alt="${m.nom}" style="${lockedImgStyle(96, 96, 'border-radius:96px;')}" /></td>`;
+  // rond car le PNG EST rond. Skippé si m.photo === false (ex: Justine).
+  const photoBlock = hasPhoto
+    ? `<td valign="top" ${WHITE_CELL} style="padding:0 26px 0 0;width:108px;min-width:108px;${WHITE_STYLE}"><img src="${photoUrl}" width="96" height="96" alt="${m.nom}" style="${lockedImgStyle(96, 96, 'border-radius:96px;')}" /></td>`
+    : '';
+
+  // Nom : si prénom seul (Justine), pas de <span> vide qui laisserait un espace.
+  const nameHtml = hasLastName
+    ? `${firstName} <span style="font-weight:300;color:#1a1a1a;">${lastName}</span>`
+    : firstName;
 
   // Séparateur vertical : cellule 1px bgcolor accent. Bat border-right qui
   // se comporte de façon erratique dans Outlook Desktop (moteur Word) :
@@ -243,7 +255,7 @@ function buildEditorial(m, brand, logoDims, badges) {
   <tr>
     ${photoBlock}
     <td valign="top" ${WHITE_CELL} style="padding:0 30px 0 0;${WHITE_STYLE}">
-      <div style="font-family:${titleFamily};font-size:26px;line-height:1.1;color:#0a0a0a;font-weight:800;letter-spacing:0.01em;">${firstName} <span style="font-weight:300;color:#1a1a1a;">${lastName}</span></div>
+      <div style="font-family:${titleFamily};font-size:26px;line-height:1.1;color:#0a0a0a;font-weight:800;letter-spacing:0.01em;">${nameHtml}</div>
       <div style="font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#4d4d4c;margin-top:10px;letter-spacing:0.22em;text-transform:uppercase;">${m.role}</div>
       <div style="height:18px;line-height:18px;font-size:0;">&nbsp;</div>
       <div style="font-size:13px;line-height:1.7;color:#1a1a1a;">
@@ -305,9 +317,13 @@ ${innerHtml}
 function buildIndex() {
   const groups = ['KP', 'TDN', 'PS'].map(bid => {
     const b = BRANDS[bid];
-    const items = MEMBERS.filter(m => m.brand === bid).map(m => `
+    const items = MEMBERS.filter(m => m.brand === bid).map(m => {
+      const avatar = m.photo === false
+        ? `<div style="width:48px;height:48px;border-radius:48px;background:${b.accent};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;flex-shrink:0;">${m.nom[0]}</div>`
+        : `<img src="assets/photo-${m.photoId}.png" width="48" height="48" style="border-radius:48px;display:block;" alt="">`;
+      return `
       <li style="display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid #ece6e0;">
-        <img src="assets/photo-${m.photoId}.png" width="48" height="48" style="border-radius:48px;display:block;" alt="">
+        ${avatar}
         <div style="flex:1;">
           <div style="font-weight:600;font-size:15px;color:#1a1a1a;">${m.nom}</div>
           <div style="font-size:12px;color:#666;letter-spacing:0.06em;text-transform:uppercase;margin-top:2px;">${m.role}</div>
@@ -315,7 +331,8 @@ function buildIndex() {
         </div>
         <button data-id="${m.id}" data-name="${m.nom}" style="background:${b.accent};color:#fff;border:0;padding:10px 18px;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px;letter-spacing:0.02em;">Copier la signature</button>
         <a href="signatures/${m.id}.html" target="_blank" style="font-size:12px;color:#999;text-decoration:none;border-bottom:1px dotted #ccc;">aperçu</a>
-      </li>`).join('');
+      </li>`;
+    }).join('');
     return `
       <section style="margin:40px 0;">
         <h2 style="font-family:'Avenir Next','Avenir',Helvetica,sans-serif;font-size:13px;letter-spacing:0.2em;text-transform:uppercase;color:${b.accent};margin:0 0 8px;">${b.name}</h2>
