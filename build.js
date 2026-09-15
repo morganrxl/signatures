@@ -63,6 +63,7 @@ const MEMBERS = [
   { id: 'sidonie',   brand: 'TDN', nom: 'Sidonie BRASSART', role: 'Assistante de projet',                    email: 'sidonie@tomberdesnues.com', tel: '+33 7 83 73 95 96', photoId: 'sidonie' },
   { id: 'alexandre', brand: 'PS',  nom: 'Alexandre BILLON', role: 'Directeur Associé',                       email: 'alexandre@pianoservice.fr', tel: '+33 6 80 44 73 52', photoId: 'alexandre' },
   { id: 'yann-ps',     brand: 'PS',  nom: 'Yann ROUXEL',      role: 'Directeur Général',                       email: 'yann@pianoservice.fr',      tel: '+33 6 27 42 78 20', photoId: 'yann' },
+  { id: 'yann-tdn',    brand: 'TDN', nom: 'Yann ROUXEL',      role: 'Directeur Général',                       email: 'yann@tomberdesnues.com',    tel: '+33 6 27 42 78 20', photoId: 'yann' },
   { id: 'justine-tdn', brand: 'TDN', nom: 'Justine',          role: 'Commerciale',                             email: 'justine@tomberdesnues.com', tel: '+33 6 11 48 94 37', photo: false },
   { id: 'justine-kp',  brand: 'KP',  nom: 'Justine',          role: 'Commerciale',                             email: 'justine@karreprod.com',     tel: '+33 6 11 48 94 37', photo: false },
   { id: 'justine-ps',  brand: 'PS',  nom: 'Justine',          role: 'Commerciale',                             email: 'justine@pianoservice.fr',   tel: '+33 6 11 48 94 37', photo: false }
@@ -99,6 +100,10 @@ async function buildPhotos() {
   for (const [id, num] of Object.entries(PHOTO_MAP)) {
     const src = path.join(SRC_DIR, `2025.12 Noe-l Karre-prod&Co-${num}.jpg`);
     const dst = path.join(ASSETS_DIR, `photo-${id}.png`);
+    if (!fs.existsSync(src)) {
+      if (fs.existsSync(dst)) { console.log(`  photo-${id}.png SKIP (source absente, dst conservé)`); continue; }
+      throw new Error(`Source manquante ET dst absent: ${src}`);
+    }
     await sharp(src)
       .rotate()
       .resize(SIZE, SIZE, { fit: 'cover', position: CROP_POSITION[id] || 'top' })
@@ -123,6 +128,16 @@ async function svgToPng(srcFile, dstFile, displayWidth) {
   const PAD = 14; // px de padding @1x sur chaque côté
   const innerWidth = Math.max(1, (displayWidth - PAD * 2) * 2);
   const srcPath = path.join(SRC_DIR, srcFile);
+
+  const dstPath = path.join(ASSETS_DIR, dstFile);
+  if (!fs.existsSync(srcPath)) {
+    if (fs.existsSync(dstPath)) {
+      const m = await sharp(dstPath).metadata();
+      console.log(`  ${dstFile} SKIP (source absente, dst conservé)`);
+      return { width: Math.round(m.width / 2), height: Math.round(m.height / 2) };
+    }
+    throw new Error(`Source manquante ET dst absent: ${srcPath}`);
+  }
 
   // Mesure de la hauteur intermédiaire pour verrouiller un PNG pair.
   // Sinon out.height impair → display height = round(h/2) → écart sub-pixel
@@ -159,26 +174,33 @@ async function buildLogos() {
 async function buildBadges() {
   const SIZE = 38;
   const dims = {};
-  // EcoVadis (carré)
-  await sharp(path.join(SRC_DIR, 'cert-ecovadis.svg'), { density: 600 })
-    .resize({ height: SIZE * 2, width: SIZE * 2, fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 0 } })
-    .png()
-    .toFile(path.join(ASSETS_DIR, 'cert-ecovadis.png'));
-  dims.ecovadis = { w: SIZE, h: SIZE };
 
-  // Label événement (JPG)
-  const labelOut = await sharp(path.join(SRC_DIR, 'Logo-Label-e1499678404115.jpg'))
-    .resize({ height: SIZE * 2 })
-    .toFormat('png')
-    .toFile(path.join(ASSETS_DIR, 'label-event.png'));
-  dims.label = { w: Math.round(labelOut.width / 2), h: SIZE };
+  async function badge(srcFile, dstFile, pipeline, fixedW = null) {
+    const srcPath = path.join(SRC_DIR, srcFile);
+    const dstPath = path.join(ASSETS_DIR, dstFile);
+    if (!fs.existsSync(srcPath)) {
+      if (fs.existsSync(dstPath)) {
+        const m = await sharp(dstPath).metadata();
+        console.log(`  ${dstFile} SKIP (source absente, dst conservé)`);
+        return { w: fixedW || Math.round(m.width / 2), h: SIZE };
+      }
+      throw new Error(`Source manquante ET dst absent: ${srcPath}`);
+    }
+    const out = await pipeline(srcPath, dstPath);
+    return { w: fixedW || Math.round(out.width / 2), h: SIZE };
+  }
 
-  // Synpase (PNG)
-  const synOut = await sharp(path.join(SRC_DIR, 'logo-synpase.png'))
-    .resize({ height: SIZE * 2 })
-    .png()
-    .toFile(path.join(ASSETS_DIR, 'logo-synpase.png'));
-  dims.synpase = { w: Math.round(synOut.width / 2), h: SIZE };
+  dims.ecovadis = await badge('cert-ecovadis.svg', 'cert-ecovadis.png',
+    (src, dst) => sharp(src, { density: 600 })
+      .resize({ height: SIZE * 2, width: SIZE * 2, fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 0 } })
+      .png().toFile(dst),
+    SIZE);
+
+  dims.label = await badge('Logo-Label-e1499678404115.jpg', 'label-event.png',
+    (src, dst) => sharp(src).resize({ height: SIZE * 2 }).toFormat('png').toFile(dst));
+
+  dims.synpase = await badge('logo-synpase.png', 'logo-synpase.png',
+    (src, dst) => sharp(src).resize({ height: SIZE * 2 }).png().toFile(dst));
 
   console.log('  badges PNG OK', dims);
   return dims;
@@ -255,7 +277,7 @@ function buildEditorial(m, brand, logoDims, badges) {
   <tr>
     ${photoBlock}
     <td valign="top" ${WHITE_CELL} style="padding:0 30px 0 0;${WHITE_STYLE}">
-      <div style="font-family:${titleFamily};font-size:26px;line-height:1.1;color:#0a0a0a;font-weight:800;letter-spacing:0.01em;">${nameHtml}</div>
+      <div style="font-family:${titleFamily};font-size:26px;line-height:1.1;color:#0a0a0a;font-weight:400;letter-spacing:0.01em;">${nameHtml}</div>
       <div style="font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#4d4d4c;margin-top:10px;letter-spacing:0.22em;text-transform:uppercase;">${m.role}</div>
       <div style="height:18px;line-height:18px;font-size:0;">&nbsp;</div>
       <div style="font-size:13px;line-height:1.7;color:#1a1a1a;">
