@@ -269,21 +269,21 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   // Fond blanc CUIT sur chaque cellule : bgcolor + background-color inline.
   // Gmail Android + Outlook Windows dark mode ne peuvent plus inverser le fond
   // -> les couleurs texte (#1a1a1a) restent lisibles sur blanc partout.
-  // Faux blanc #fefefe : les clients mail traitent #ffffff comme le fond par
-  // défaut et le retirent / l'inversent ; un blanc quasi pur est conservé.
-  const WHITE_CELL = 'bgcolor="#e5e5e5"';
-  const WHITE_STYLE = 'background-color:#e5e5e5;';
+  // Fond noir (faux noir #0a0a0a plutôt que #000, que certains clients
+  // traitent comme valeur par défaut). Textes en clair, logos en version blanche.
+  const BG_CELL = 'bgcolor="#0a0a0a"';
+  const BG_STYLE = 'background-color:#0a0a0a;';
 
   // Photo : PNG circulaire pre-rendu (coins transparents) — pas besoin de
   // border-radius. Outlook desktop ignore border-radius mais affichera le
   // rond car le PNG EST rond. Skippé si m.photo === false (ex: Justine).
   const photoBlock = hasPhoto
-    ? `<td valign="top" ${WHITE_CELL} style="padding:0 18px 0 0;width:96px;min-width:96px;${WHITE_STYLE}mso-line-height-rule:exactly;"><img src="${photoUrl}" width="96" height="96" alt="${m.nom}" style="${lockedImgStyle(96, 96, 'border-radius:96px;')}" /></td>`
+    ? `<td valign="top" ${BG_CELL} style="padding:0 18px 0 0;width:96px;min-width:96px;${BG_STYLE}mso-line-height-rule:exactly;"><img src="${photoUrl}" width="96" height="96" alt="${m.nom}" style="${lockedImgStyle(96, 96, 'border-radius:96px;')}" /></td>`
     : '';
 
   // Nom : si prénom seul (Justine), pas de <span> vide qui laisserait un espace.
   const nameHtml = hasLastName
-    ? `${firstName} <span style="font-weight:300;color:#1a1a1a;">${lastName}</span>`
+    ? `${firstName} <span style="font-weight:300;color:#f2f2f2;">${lastName}</span>`
     : firstName;
 
   // Séparateur vertical : cellule 1px bgcolor accent. Bat border-right qui
@@ -296,33 +296,33 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
 
   // En mode framed, on retire les bordures haut/bas de la strip labels.
   const labelsRow = brand.labels
-    ? `<tr><td colspan="${NCOLS}" ${WHITE_CELL} style="padding:14px 0;${framed ? '' : `border-top:1px solid ${accentPale};border-bottom:1px solid ${accentPale};`}${WHITE_STYLE}">${labelsStripHtml(badges)}</td></tr>`
-    : `<tr><td colspan="${NCOLS}" ${WHITE_CELL} style="padding:0;${framed ? '' : `border-top:1px solid ${accentPale};`}${WHITE_STYLE}">&nbsp;</td></tr>`;
+    ? `<tr><td colspan="${NCOLS}" ${BG_CELL} style="padding:14px 0;${framed ? '' : `border-top:1px solid ${accentPale};border-bottom:1px solid ${accentPale};`}${BG_STYLE}">${labelsStripHtml(badges)}</td></tr>`
+    : `<tr><td colspan="${NCOLS}" ${BG_CELL} style="padding:0;${framed ? '' : `border-top:1px solid ${accentPale};`}${BG_STYLE}">&nbsp;</td></tr>`;
 
-  const inner = `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${SIG_WIDTH}" ${WHITE_CELL} style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:14px;line-height:1.45;width:${SIG_WIDTH}px;min-width:${SIG_WIDTH}px;table-layout:fixed;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;">
+  const inner = `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${SIG_WIDTH}" ${BG_CELL} style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;font-family:Helvetica,Arial,sans-serif;color:#f2f2f2;font-size:14px;line-height:1.45;width:${SIG_WIDTH}px;min-width:${SIG_WIDTH}px;table-layout:fixed;${BG_STYLE}color-scheme:light only;supported-color-schemes:light only;">
   <tr>
     ${photoBlock}
-    <td valign="top" ${WHITE_CELL} style="padding:0;${WHITE_STYLE}">
-      <div style="font-family:${titleFamily};font-size:24px;line-height:1.1;color:#0a0a0a;font-weight:400;letter-spacing:0.01em;white-space:nowrap;">${nameHtml}</div>
-      <div style="font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#4d4d4c;margin-top:10px;letter-spacing:0.12em;text-transform:uppercase;white-space:nowrap;">${m.role}</div>
+    <td valign="top" ${BG_CELL} style="padding:0;${BG_STYLE}">
+      <div style="font-family:${titleFamily};font-size:24px;line-height:1.1;color:#ffffff;font-weight:400;letter-spacing:0.01em;white-space:nowrap;">${nameHtml}</div>
+      <div style="font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#b3b3b3;margin-top:10px;letter-spacing:0.12em;text-transform:uppercase;white-space:nowrap;">${m.role}</div>
       <div style="height:18px;line-height:18px;font-size:0;">&nbsp;</div>
-      <div style="font-size:13px;line-height:1.7;color:#1a1a1a;white-space:nowrap;">
-        <a href="mailto:${m.email}" style="color:#1a1a1a;text-decoration:none;border-bottom:1px solid ${accentPale};">${m.email}</a><br/>
-        <a href="tel:${m.tel.replace(/\s/g,'')}" style="color:#1a1a1a;text-decoration:none;">${m.tel}</a><br/>
-        <a href="${brand.siteUrl}" style="color:#1a1a1a;text-decoration:none;font-weight:600;">${brand.site}</a> · <a href="${brand.linkedin}" style="color:#1a1a1a;text-decoration:none;font-weight:600;">LinkedIn</a>
+      <div style="font-size:13px;line-height:1.7;color:#f2f2f2;white-space:nowrap;">
+        <a href="mailto:${m.email}" style="color:#f2f2f2;text-decoration:none;border-bottom:1px solid ${accentPale};">${m.email}</a><br/>
+        <a href="tel:${m.tel.replace(/\s/g,'')}" style="color:#f2f2f2;text-decoration:none;">${m.tel}</a><br/>
+        <a href="${brand.siteUrl}" style="color:#f2f2f2;text-decoration:none;font-weight:600;">${brand.site}</a> · <a href="${brand.linkedin}" style="color:#f2f2f2;text-decoration:none;font-weight:600;">LinkedIn</a>
       </div>
     </td>
     ${separatorCell}
-    <td valign="${framed ? 'top' : 'middle'}" align="center" ${WHITE_CELL} style="padding:0 0 0 18px;width:${logoW}px;min-width:${logoW}px;text-align:center;${WHITE_STYLE}mso-line-height-rule:exactly;">
+    <td valign="${framed ? 'top' : 'middle'}" align="center" ${BG_CELL} style="padding:0 0 0 18px;width:${logoW}px;min-width:${logoW}px;text-align:center;${BG_STYLE}mso-line-height-rule:exactly;">
       <img src="${logoUrl}" width="${logoW}" height="${logoH}" alt="${brand.name}" style="${lockedImgStyle(logoW, logoH, 'margin:0 auto;')}" />
     </td>
   </tr>
-  <tr><td colspan="${NCOLS}" ${WHITE_CELL} style="height:18px;line-height:18px;font-size:0;${WHITE_STYLE}">&nbsp;</td></tr>
+  <tr><td colspan="${NCOLS}" ${BG_CELL} style="height:18px;line-height:18px;font-size:0;${BG_STYLE}">&nbsp;</td></tr>
   ${labelsRow}
   <tr>
-    <td colspan="${NCOLS}" ${WHITE_CELL} style="padding:14px 0 0;${WHITE_STYLE}">
-      <span style="font-family:${titleFamily};font-weight:300;font-size:10px;color:#1a1a1a;letter-spacing:0.01em;">«&nbsp;${brand.reviewMsg}&nbsp;»</span>
-      <a href="${brand.reviewUrl}" style="font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#1a1a1a;text-decoration:none;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border-bottom:2px solid ${accentPale};padding-bottom:2px;margin-left:8px;">→ Laissez votre avis</a>
+    <td colspan="${NCOLS}" ${BG_CELL} style="padding:14px 0 0;${BG_STYLE}">
+      <span style="font-family:${titleFamily};font-weight:300;font-size:10px;color:#f2f2f2;letter-spacing:0.01em;">«&nbsp;${brand.reviewMsg}&nbsp;»</span>
+      <a href="${brand.reviewUrl}" style="font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#f2f2f2;text-decoration:none;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border-bottom:2px solid ${accentPale};padding-bottom:2px;margin-left:8px;">→ Laissez votre avis</a>
     </td>
   </tr>
 </table>`;
@@ -340,12 +340,12 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
     // Bordure + arrondi sur la cellule (border-radius sur td : Apple Mail, Gmail ok ;
     // Outlook Desktop affiche des coins carrés).
     return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:separate;border-spacing:0;mso-table-lspace:0pt;mso-table-rspace:0pt;margin-top:24px;color-scheme:light only;supported-color-schemes:light only;">
-  <tr><td ${WHITE_CELL} style="padding:24px 20px;${WHITE_STYLE}border:2px solid ${accent};border-radius:14px;">${inner}</td></tr>
+  <tr><td ${BG_CELL} style="padding:24px 20px;${BG_STYLE}border:2px solid ${accent};border-radius:14px;">${inner}</td></tr>
 </table>`;
   }
 
-  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${OUTER_WIDTH}" ${WHITE_CELL} style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;">
-  <tr><td ${WHITE_CELL} style="padding:20px 0 0;border-top:1px solid #ece6e0;${WHITE_STYLE}">${inner}</td></tr>
+  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${OUTER_WIDTH}" ${BG_CELL} style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${BG_STYLE}color-scheme:light only;supported-color-schemes:light only;">
+  <tr><td ${BG_CELL} style="padding:20px 0 0;border-top:1px solid #ece6e0;${BG_STYLE}">${inner}</td></tr>
 </table>`;
 }
 
