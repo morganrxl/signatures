@@ -262,7 +262,7 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   const SIG_WIDTH = 620;
   const hasPhoto = m.photo !== false;
   const NCOLS = 2 + (hasPhoto ? 1 : 0) + (framed ? 0 : 1); // photo? | texte | (sep si !framed) | logo
-  const OUTER_WIDTH = framed ? SIG_WIDTH + 60 : SIG_WIDTH; // +60 = 4px border + 2x28px padding interne
+  const OUTER_WIDTH = framed ? SIG_WIDTH + 63 : SIG_WIDTH; // +63 = 2x1.5px border + 2x30px padding, box-sizing:border-box
   const hasLastName = lastName.length > 0;
 
   // Fond blanc CUIT sur chaque cellule : bgcolor + background-color inline.
@@ -331,13 +331,11 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   //   mais couleur/épaisseur préservés — acceptable.
   // Mode par défaut : ligne #ece6e0 en top pour séparer du corps du mail (comportement historique).
   if (framed) {
-    // Wrapper <div> porte le border + border-radius + overflow (fiable Apple Mail).
-    // Outlook Desktop ignore border-radius (coins carrés) mais garde border color/épaisseur.
-    return `<div style="width:${OUTER_WIDTH}px;max-width:100%;margin-top:24px;${WHITE_STYLE}border:1.5px solid ${accent};border-radius:14px;overflow:hidden;box-sizing:border-box;color-scheme:light only;supported-color-schemes:light only;">
-  <table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${SIG_WIDTH}" ${WHITE_CELL} style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;width:${SIG_WIDTH}px;${WHITE_STYLE}margin:0 auto;">
-    <tr><td ${WHITE_CELL} style="padding:26px 30px;${WHITE_STYLE}">${inner}</td></tr>
-  </table>
-</div>`;
+    // Structure : un seul <div> wrapper qui porte border + radius + overflow + padding.
+    // Fiable dans Apple Mail (border-radius sur div ok), Gmail (padding sur div ok).
+    // Outlook Desktop ignore border-radius (coins carrés) mais garde border et padding.
+    // width = SIG_WIDTH + 2x padding + 2x border pour que inner (620) rentre pile.
+    return `<div style="width:${OUTER_WIDTH}px;max-width:100%;margin-top:24px;box-sizing:border-box;padding:26px 30px;${WHITE_STYLE}border:1.5px solid ${accent};border-radius:14px;overflow:hidden;color-scheme:light only;supported-color-schemes:light only;">${inner}</div>`;
   }
 
   return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${OUTER_WIDTH}" ${WHITE_CELL} style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;">
