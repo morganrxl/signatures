@@ -315,8 +315,8 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   ${labelsRow}
   <tr>
     <td colspan="${NCOLS}" ${WHITE_CELL} style="padding:14px 0 0;${WHITE_STYLE}">
-      <span style="font-family:${titleFamily};font-weight:300;font-size:14px;color:#1a1a1a;letter-spacing:0.01em;">«&nbsp;${brand.reviewMsg}&nbsp;»</span>
-      <a href="${brand.reviewUrl}" style="font-family:Helvetica,Arial,sans-serif;font-size:13px;color:#1a1a1a;text-decoration:none;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border-bottom:2px solid ${accentPale};padding-bottom:2px;margin-left:8px;">→ Laissez votre avis</a>
+      <span style="font-family:${titleFamily};font-weight:300;font-size:10px;color:#1a1a1a;letter-spacing:0.01em;">«&nbsp;${brand.reviewMsg}&nbsp;»</span>
+      <a href="${brand.reviewUrl}" style="font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#1a1a1a;text-decoration:none;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border-bottom:2px solid ${accentPale};padding-bottom:2px;margin-left:8px;">→ Laissez votre avis</a>
     </td>
   </tr>
 </table>`;
