@@ -259,10 +259,11 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   // Largeur fixe du bloc signature : empêche les clients mail mobile de
   // l'écraser sur la quote (overlap reply) et garantit que les images
   // gardent leur taille (pas de redistribution proportionnelle des cellules).
-  const SIG_WIDTH = 620;
+  // 556 = 600 (largeur standard d'un corps de mail) - 2x2px bordure - 2x20px padding.
+  const SIG_WIDTH = 556;
   const hasPhoto = m.photo !== false;
   const NCOLS = 2 + (hasPhoto ? 1 : 0) + (framed ? 0 : 1); // photo? | texte | (sep si !framed) | logo
-  const OUTER_WIDTH = framed ? SIG_WIDTH + 64 : SIG_WIDTH; // +64 = 2x2px border + 2x30px padding, box-sizing:border-box
+  const OUTER_WIDTH = SIG_WIDTH;
   const hasLastName = lastName.length > 0;
 
   // Fond blanc CUIT sur chaque cellule : bgcolor + background-color inline.
@@ -275,7 +276,7 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   // border-radius. Outlook desktop ignore border-radius mais affichera le
   // rond car le PNG EST rond. Skippé si m.photo === false (ex: Justine).
   const photoBlock = hasPhoto
-    ? `<td valign="top" ${WHITE_CELL} style="padding:0 26px 0 0;width:108px;min-width:108px;${WHITE_STYLE}mso-line-height-rule:exactly;"><img src="${photoUrl}" width="96" height="96" alt="${m.nom}" style="${lockedImgStyle(96, 96, 'border-radius:96px;')}" /></td>`
+    ? `<td valign="top" ${WHITE_CELL} style="padding:0 18px 0 0;width:96px;min-width:96px;${WHITE_STYLE}mso-line-height-rule:exactly;"><img src="${photoUrl}" width="96" height="96" alt="${m.nom}" style="${lockedImgStyle(96, 96, 'border-radius:96px;')}" /></td>`
     : '';
 
   // Nom : si prénom seul (Justine), pas de <span> vide qui laisserait un espace.
@@ -299,18 +300,18 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   const inner = `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${SIG_WIDTH}" ${WHITE_CELL} style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:14px;line-height:1.45;width:${SIG_WIDTH}px;min-width:${SIG_WIDTH}px;table-layout:fixed;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;">
   <tr>
     ${photoBlock}
-    <td valign="top" ${WHITE_CELL} style="padding:0 30px 0 0;${WHITE_STYLE}">
-      <div style="font-family:${titleFamily};font-size:26px;line-height:1.1;color:#0a0a0a;font-weight:400;letter-spacing:0.01em;white-space:nowrap;">${nameHtml}</div>
-      <div style="font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#4d4d4c;margin-top:10px;letter-spacing:0.22em;text-transform:uppercase;">${m.role}</div>
+    <td valign="top" ${WHITE_CELL} style="padding:0;${WHITE_STYLE}">
+      <div style="font-family:${titleFamily};font-size:24px;line-height:1.1;color:#0a0a0a;font-weight:400;letter-spacing:0.01em;white-space:nowrap;">${nameHtml}</div>
+      <div style="font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#4d4d4c;margin-top:10px;letter-spacing:0.12em;text-transform:uppercase;white-space:nowrap;">${m.role}</div>
       <div style="height:18px;line-height:18px;font-size:0;">&nbsp;</div>
-      <div style="font-size:13px;line-height:1.7;color:#1a1a1a;">
+      <div style="font-size:13px;line-height:1.7;color:#1a1a1a;white-space:nowrap;">
         <a href="mailto:${m.email}" style="color:#1a1a1a;text-decoration:none;border-bottom:1px solid ${accentPale};">${m.email}</a><br/>
         <a href="tel:${m.tel.replace(/\s/g,'')}" style="color:#1a1a1a;text-decoration:none;">${m.tel}</a><br/>
         <a href="${brand.siteUrl}" style="color:#1a1a1a;text-decoration:none;font-weight:600;">${brand.site}</a> · <a href="${brand.linkedin}" style="color:#1a1a1a;text-decoration:none;font-weight:600;">LinkedIn</a>
       </div>
     </td>
     ${separatorCell}
-    <td valign="${framed ? 'top' : 'middle'}" align="center" ${WHITE_CELL} style="padding:0 0 0 26px;width:${logoW + 10}px;min-width:${logoW + 10}px;text-align:center;${WHITE_STYLE}mso-line-height-rule:exactly;">
+    <td valign="${framed ? 'top' : 'middle'}" align="center" ${WHITE_CELL} style="padding:0 0 0 18px;width:${logoW}px;min-width:${logoW}px;text-align:center;${WHITE_STYLE}mso-line-height-rule:exactly;">
       <img src="${logoUrl}" width="${logoW}" height="${logoH}" alt="${brand.name}" style="${lockedImgStyle(logoW, logoH, 'margin:0 auto;')}" />
     </td>
   </tr>
@@ -337,7 +338,7 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
     // Bordure + arrondi sur la cellule (border-radius sur td : Apple Mail, Gmail ok ;
     // Outlook Desktop affiche des coins carrés).
     return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:separate;border-spacing:0;mso-table-lspace:0pt;mso-table-rspace:0pt;margin-top:24px;color-scheme:light only;supported-color-schemes:light only;">
-  <tr><td ${WHITE_CELL} style="padding:26px 30px;${WHITE_STYLE}border:2px solid ${accent};border-radius:14px;">${inner}</td></tr>
+  <tr><td ${WHITE_CELL} style="padding:24px 20px;${WHITE_STYLE}border:2px solid ${accent};border-radius:14px;">${inner}</td></tr>
 </table>`;
   }
 
