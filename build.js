@@ -265,11 +265,8 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   // Fond blanc CUIT sur chaque cellule : bgcolor + background-color inline.
   // Gmail Android + Outlook Windows dark mode ne peuvent plus inverser le fond
   // -> les couleurs texte (#1a1a1a) restent lisibles sur blanc partout.
-  // En mode framed (glassy) : cellules internes rendues transparentes pour
-  // laisser le fond rgba(255,255,255,0.2) + blur du wrapper extérieur s'exprimer.
-  // Trade-off : on perd le bulletproof dark-mode (Gmail Android peut inverser).
-  const WHITE_CELL = framed ? '' : 'bgcolor="#ffffff"';
-  const WHITE_STYLE = framed ? '' : 'background-color:#ffffff;';
+  const WHITE_CELL = 'bgcolor="#ffffff"';
+  const WHITE_STYLE = 'background-color:#ffffff;';
 
   // Photo : PNG circulaire pre-rendu (coins transparents) — pas besoin de
   // border-radius. Outlook desktop ignore border-radius mais affichera le
@@ -330,15 +327,11 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   //   fonctionne sur <table>). Outlook Desktop ignore border-radius : coins carrés
   //   mais couleur/épaisseur préservés — acceptable.
   // Mode par défaut : ligne #ece6e0 en top pour séparer du corps du mail (comportement historique).
-  // Framed = glassy : rgba(255,255,255,0.2) + backdrop-filter blur 20px.
-  //   backdrop-filter n'est PAS supporté par les clients mail : en prod, le sig
-  //   apparaîtra juste avec un fond 20% blanc translucide (grisâtre sur dark UI).
-  const glassyBg = 'background:rgba(255,255,255,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);';
   const outerStyle = framed
-    ? `border-collapse:separate;border-spacing:0;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${glassyBg}border:1.5px solid ${accent};border-radius:14px;overflow:hidden;color-scheme:light only;supported-color-schemes:light only;`
+    ? `border-collapse:separate;border-spacing:0;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${WHITE_STYLE}border:1.5px solid ${accent};border-radius:14px;overflow:hidden;color-scheme:light only;supported-color-schemes:light only;`
     : `border-collapse:collapse;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;`;
   const outerTdStyle = framed
-    ? `padding:26px 30px;`
+    ? `padding:26px 30px;${WHITE_STYLE}`
     : `padding:20px 0 0;border-top:1px solid #ece6e0;${WHITE_STYLE}`;
 
   return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${OUTER_WIDTH}" ${WHITE_CELL} style="${outerStyle}">
