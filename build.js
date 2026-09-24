@@ -21,7 +21,7 @@ const BRANDS = {
     reviewMsg: 'Vous aimez travailler avec nous — Partagez votre expérience',
     accent: '#C06D80', accentPale: '#F6C9D0',
     logoFile: 'logo-tdn.svg', logoWidth: 160, labels: true,
-    logoTargetH: 97 // target W=250
+    logoTargetH: 89 // target W=230
   },
   KP: {
     id: 'KP', name: 'Karré Production',
