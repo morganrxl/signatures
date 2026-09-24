@@ -592,10 +592,11 @@ async function readAssetDims() {
     const brand = BRANDS[m.brand];
     let variants;
     if (m.framed === true) {
-      // Mode framed : 2 versions à comparer pour valider la taille du logo.
+      // Mode framed : plusieurs versions à comparer pour valider la taille du logo.
       variants = [
         { label: 'Version 1 · logo taille photo (96px)', sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges, 96) },
         { label: 'Version 2 · logo grand (150px)',       sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges, 150) },
+        { label: 'Version 3 · logo moyen (120px)',       sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges, 120) },
       ];
     } else {
       variants = [{ label: null, sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges) }];
