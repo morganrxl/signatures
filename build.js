@@ -228,23 +228,23 @@ function labelsStripHtml(badges, gap = 18) {
   return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;"><tr>${items.map((it, i) => `<td valign="middle" style="padding:0 ${i === items.length - 1 ? 0 : gap}px 0 0;"><img src="${it.src}" width="${it.w}" height="${it.h}" alt="${it.alt}" style="${lockedImgStyle(it.w, it.h)}" /></td>`).join('')}</tr></table>`;
 }
 
-function buildEditorial(m, brand, logoDims, badges) {
+function buildEditorial(m, brand, logoDims, badges, logoScaleFactor = 1) {
   const { accent, accentPale } = brand;
   const photoUrl = `${BASE_URL}/assets/photo-${m.photoId}.png`;
   const logoUrl = `${BASE_URL}/assets/logo-${brand.id.toLowerCase()}.png`;
-  // Cap logo à 96px (= taille photo) sur son côté le plus long en mode framed
-  // pour équilibrer photo/logo visuellement. Aspect ratio préservé. Le PNG est
-  // rendu à 2x donc reste net après downscale HTML.
+  // Cap logo en mode framed. logoScaleFactor permet de tester plusieurs tailles
+  // (V1 = 96px = taille photo, V2 = 192px pour combler l'espace vide sous le logo).
+  // Aspect ratio préservé. Le PNG est rendu à 2x donc reste net après downscale HTML.
   let logoH = logoDims.height;
   let logoW = logoDims.width;
   if (m.framed === true) {
-    const PHOTO_SIZE = 96;
+    const LOGO_TARGET = 96 * logoScaleFactor;
     if (logoW >= logoH) {
-      logoH = Math.round(PHOTO_SIZE * logoDims.height / logoDims.width);
-      logoW = PHOTO_SIZE;
+      logoH = Math.round(LOGO_TARGET * logoDims.height / logoDims.width);
+      logoW = LOGO_TARGET;
     } else {
-      logoW = Math.round(PHOTO_SIZE * logoDims.width / logoDims.height);
-      logoH = PHOTO_SIZE;
+      logoW = Math.round(LOGO_TARGET * logoDims.width / logoDims.height);
+      logoH = LOGO_TARGET;
     }
   }
   const firstName = m.nom.split(' ')[0];
@@ -341,18 +341,34 @@ function buildEditorial(m, brand, logoDims, badges) {
 </table>`;
 }
 
-function wrapStandalone(innerHtml, title) {
-  // meta color-scheme + supported-color-schemes : indique aux clients mail
-  // (Apple Mail, Outlook Mac, iOS Mail) que la signature est designed pour
-  // light mode uniquement. Bloque leur auto-inversion. Gmail Web strippe le
-  // head donc ne l'utilise pas, mais on cuit aussi les bgcolor dans le body
-  // pour Android. Ceinture + bretelles.
+function wrapStandalone(variants, title) {
+  // variants = [{ label, sig }, ...]. Si un seul variant, aperçu 2 fonds simple.
+  // Si plusieurs (mode framed avec V1/V2), on affiche chaque variant sur les
+  // 2 fonds avec un label pour comparer.
   //
-  // Aperçu à 2 fonds (clair + sombre) : la signature s'affiche 2 fois pour
-  // visualiser le rendu en dark mode client mail. Le bloc copiable est
-  // délimité par <!-- SIG:START --> / <!-- SIG:END --> pour que le JS de
-  // copie n'extraie qu'une seule occurrence.
+  // Le bloc copiable est délimité par <!-- SIG:START --> / <!-- SIG:END -->
+  // autour de la PREMIÈRE variante uniquement, pour que le JS de copie de
+  // l'index n'extraie qu'une seule signature.
   const labelStyle = "font-family:'Avenir Next','Avenir',Helvetica,Arial,sans-serif;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;margin:0 0 12px;font-weight:600;";
+  const variantLabelStyle = "font-family:'Avenir Next','Avenir',Helvetica,Arial,sans-serif;font-size:14px;letter-spacing:0.02em;margin:24px 0 12px;font-weight:600;";
+
+  const buildSection = (bg, textColor, subLabelColor, isFirst) => {
+    const bgLabel = bg === '#ffffff' ? 'fond clair' : 'fond sombre';
+    const variantsHtml = variants.map((v, i) => {
+      const marker = isFirst && i === 0;
+      return `${v.label ? `<p style="${variantLabelStyle}color:${subLabelColor};">${v.label}</p>` : ''}
+${marker ? '<!-- SIG:START -->' : ''}
+${v.sig}
+${marker ? '<!-- SIG:END -->' : ''}`;
+    }).join('\n');
+    return `<section style="padding:32px 24px;background:${bg};">
+  <div style="max-width:840px;margin:0 auto;">
+    <p style="${labelStyle}color:${textColor};">Aperçu — ${bgLabel}</p>
+${variantsHtml}
+  </div>
+</section>`;
+  };
+
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -367,20 +383,8 @@ function wrapStandalone(innerHtml, title) {
 </style>
 </head>
 <body style="margin:0;padding:0;background:#fbf9f7;font-family:Helvetica,Arial,sans-serif;color-scheme:light only;">
-<section style="padding:32px 24px;background:#ffffff;">
-  <div style="max-width:720px;margin:0 auto;">
-    <p style="${labelStyle}color:#666;">Aperçu — fond clair</p>
-<!-- SIG:START -->
-${innerHtml}
-<!-- SIG:END -->
-  </div>
-</section>
-<section style="padding:32px 24px;background:#0a0a0a;">
-  <div style="max-width:720px;margin:0 auto;">
-    <p style="${labelStyle}color:#bbb;">Aperçu — fond sombre</p>
-${innerHtml}
-  </div>
-</section>
+${buildSection('#ffffff', '#666', '#1a1a1a', true)}
+${buildSection('#0a0a0a', '#bbb', '#fff', false)}
 </body></html>`;
 }
 
@@ -578,8 +582,17 @@ async function readAssetDims() {
   const dimsByBrand = { KP: logoDims.kp, TDN: logoDims.tdn, PS: logoDims.ps };
   for (const m of MEMBERS) {
     const brand = BRANDS[m.brand];
-    const sig = buildEditorial(m, brand, dimsByBrand[m.brand], badges);
-    const standalone = wrapStandalone(sig, `${m.nom} — ${brand.name}`);
+    let variants;
+    if (m.framed === true) {
+      // Mode framed : 2 versions à comparer pour valider la taille du logo.
+      variants = [
+        { label: 'Version 1 · logo taille photo (96px)', sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges, 1) },
+        { label: 'Version 2 · logo x2 (192px)',           sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges, 2) },
+      ];
+    } else {
+      variants = [{ label: null, sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges) }];
+    }
+    const standalone = wrapStandalone(variants, `${m.nom} — ${brand.name}`);
     fs.writeFileSync(path.join(SIG_DIR, `${m.id}.html`), standalone);
     console.log(`  signatures/${m.id}.html`);
   }
