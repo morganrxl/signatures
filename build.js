@@ -333,7 +333,7 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   // Framed = glassy : rgba(255,255,255,0.2) + backdrop-filter blur 20px.
   //   backdrop-filter n'est PAS supporté par les clients mail : en prod, le sig
   //   apparaîtra juste avec un fond 20% blanc translucide (grisâtre sur dark UI).
-  const glassyBg = 'background:rgba(255,255,255,0.2);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);';
+  const glassyBg = 'background:rgba(255,255,255,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);';
   const outerStyle = framed
     ? `border-collapse:separate;border-spacing:0;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${glassyBg}border:1.5px solid ${accent};border-radius:14px;overflow:hidden;color-scheme:light only;supported-color-schemes:light only;`
     : `border-collapse:collapse;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;`;
