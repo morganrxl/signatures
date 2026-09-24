@@ -232,8 +232,21 @@ function buildEditorial(m, brand, logoDims, badges) {
   const { accent, accentPale } = brand;
   const photoUrl = `${BASE_URL}/assets/photo-${m.photoId}.png`;
   const logoUrl = `${BASE_URL}/assets/logo-${brand.id.toLowerCase()}.png`;
-  const logoH = logoDims.height;
-  const logoW = logoDims.width;
+  // Cap logo à 96px (= taille photo) sur son côté le plus long en mode framed
+  // pour équilibrer photo/logo visuellement. Aspect ratio préservé. Le PNG est
+  // rendu à 2x donc reste net après downscale HTML.
+  let logoH = logoDims.height;
+  let logoW = logoDims.width;
+  if (m.framed === true) {
+    const PHOTO_SIZE = 96;
+    if (logoW >= logoH) {
+      logoH = Math.round(PHOTO_SIZE * logoDims.height / logoDims.width);
+      logoW = PHOTO_SIZE;
+    } else {
+      logoW = Math.round(PHOTO_SIZE * logoDims.width / logoDims.height);
+      logoH = PHOTO_SIZE;
+    }
+  }
   const firstName = m.nom.split(' ')[0];
   const lastName = m.nom.split(' ').slice(1).join(' ');
   const titleFamily = "'Avenir Next','Avenir',Helvetica,Arial,sans-serif";
@@ -296,7 +309,7 @@ function buildEditorial(m, brand, logoDims, badges) {
       </div>
     </td>
     ${separatorCell}
-    <td valign="middle" align="center" ${WHITE_CELL} style="padding:0 0 0 26px;width:${logoW + 10}px;min-width:${logoW + 10}px;text-align:center;${WHITE_STYLE}mso-line-height-rule:exactly;">
+    <td valign="${framed ? 'top' : 'middle'}" align="center" ${WHITE_CELL} style="padding:0 0 0 26px;width:${logoW + 10}px;min-width:${logoW + 10}px;text-align:center;${WHITE_STYLE}mso-line-height-rule:exactly;">
       <img src="${logoUrl}" width="${logoW}" height="${logoH}" alt="${brand.name}" style="${lockedImgStyle(logoW, logoH, 'margin:0 auto;background-color:#ffffff;')}" />
     </td>
   </tr>
