@@ -317,7 +317,7 @@ function buildEditorial(m, brand, logoDims, badges) {
   //   mais couleur/épaisseur préservés — acceptable.
   // Mode par défaut : ligne #ece6e0 en top pour séparer du corps du mail (comportement historique).
   const outerStyle = framed
-    ? `border-collapse:separate;border-spacing:0;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${WHITE_STYLE}border:1px solid ${accent};border-radius:14px;overflow:hidden;color-scheme:light only;supported-color-schemes:light only;`
+    ? `border-collapse:separate;border-spacing:0;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${WHITE_STYLE}border:1.5px solid ${accent};border-radius:14px;overflow:hidden;color-scheme:light only;supported-color-schemes:light only;`
     : `border-collapse:collapse;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;`;
   const outerTdStyle = framed
     ? `padding:26px 30px;${WHITE_STYLE}`
