@@ -197,7 +197,7 @@ document.querySelectorAll('button[data-id]').forEach(btn => {
     try {
       const res = await fetch('signatures/' + id + '.html');
       const fullHtml = await res.text();
-      const m = fullHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+      const m = fullHtml.match(/<!-- SIG:START -->([\s\S]*?)<!-- SIG:END -->/);
       const html = (m ? m[1] : fullHtml).trim();
       const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
       const blobHtml = new Blob([html], { type: 'text/html' });

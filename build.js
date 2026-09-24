@@ -314,6 +314,12 @@ function wrapStandalone(innerHtml, title) {
   // light mode uniquement. Bloque leur auto-inversion. Gmail Web strippe le
   // head donc ne l'utilise pas, mais on cuit aussi les bgcolor dans le body
   // pour Android. Ceinture + bretelles.
+  //
+  // Aperçu à 2 fonds (clair + sombre) : la signature s'affiche 2 fois pour
+  // visualiser le rendu en dark mode client mail. Le bloc copiable est
+  // délimité par <!-- SIG:START --> / <!-- SIG:END --> pour que le JS de
+  // copie n'extraie qu'une seule occurrence.
+  const labelStyle = "font-family:'Avenir Next','Avenir',Helvetica,Arial,sans-serif;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;margin:0 0 12px;font-weight:600;";
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -327,8 +333,21 @@ function wrapStandalone(innerHtml, title) {
   body { color-scheme: light only; }
 </style>
 </head>
-<body style="margin:0;padding:24px;background:#fff;font-family:Helvetica,Arial,sans-serif;color-scheme:light only;">
+<body style="margin:0;padding:0;background:#fbf9f7;font-family:Helvetica,Arial,sans-serif;color-scheme:light only;">
+<section style="padding:32px 24px;background:#ffffff;">
+  <div style="max-width:720px;margin:0 auto;">
+    <p style="${labelStyle}color:#666;">Aperçu — fond clair</p>
+<!-- SIG:START -->
 ${innerHtml}
+<!-- SIG:END -->
+  </div>
+</section>
+<section style="padding:32px 24px;background:#0a0a0a;">
+  <div style="max-width:720px;margin:0 auto;">
+    <p style="${labelStyle}color:#bbb;">Aperçu — fond sombre</p>
+${innerHtml}
+  </div>
+</section>
 </body></html>`;
 }
 
@@ -399,7 +418,7 @@ document.querySelectorAll('button[data-id]').forEach(btn => {
     try {
       const res = await fetch('signatures/' + id + '.html');
       const fullHtml = await res.text();
-      const m = fullHtml.match(/<body[^>]*>([\\s\\S]*?)<\\/body>/i);
+      const m = fullHtml.match(/<!-- SIG:START -->([\\s\\S]*?)<!-- SIG:END -->/);
       const html = (m ? m[1] : fullHtml).trim();
       const text = html.replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ').trim();
       const blobHtml = new Blob([html], { type: 'text/html' });
