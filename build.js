@@ -315,8 +315,8 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   ${labelsRow}
   <tr>
     <td colspan="${NCOLS}" ${WHITE_CELL} style="padding:14px 0 0;${WHITE_STYLE}">
-      <span style="font-family:${titleFamily};font-weight:300;font-size:13px;color:#1a1a1a;letter-spacing:0.01em;">«&nbsp;${brand.reviewMsg}&nbsp;»</span>
-      <a href="${brand.reviewUrl}" style="font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#1a1a1a;text-decoration:none;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border-bottom:2px solid ${accentPale};padding-bottom:2px;margin-left:8px;">→ Laissez votre avis</a>
+      <span style="font-family:${titleFamily};font-weight:300;font-size:14px;color:#1a1a1a;letter-spacing:0.01em;">«&nbsp;${brand.reviewMsg}&nbsp;»</span>
+      <a href="${brand.reviewUrl}" style="font-family:Helvetica,Arial,sans-serif;font-size:13px;color:#1a1a1a;text-decoration:none;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border-bottom:2px solid ${accentPale};padding-bottom:2px;margin-left:8px;">→ Laissez votre avis</a>
     </td>
   </tr>
 </table>`;
@@ -585,11 +585,9 @@ async function readAssetDims() {
     const brand = BRANDS[m.brand];
     let variants;
     if (m.framed === true) {
-      // Mode framed : plusieurs versions à comparer pour valider la taille du logo.
+      // Mode framed : logo à 120px (V3 validée).
       variants = [
-        { label: 'Version 1 · logo taille photo (96px)', sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges, 96) },
-        { label: 'Version 2 · logo grand (150px)',       sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges, 150) },
-        { label: 'Version 3 · logo moyen (120px)',       sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges, 120) },
+        { label: null, sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges, 120) },
       ];
     } else {
       variants = [{ label: null, sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges) }];
