@@ -300,7 +300,7 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   <tr>
     ${photoBlock}
     <td valign="top" ${WHITE_CELL} style="padding:0 30px 0 0;${WHITE_STYLE}">
-      <div style="font-family:${titleFamily};font-size:26px;line-height:1.1;color:#0a0a0a;font-weight:400;letter-spacing:0.01em;">${nameHtml}</div>
+      <div style="font-family:${titleFamily};font-size:26px;line-height:1.1;color:#0a0a0a;font-weight:400;letter-spacing:0.01em;white-space:nowrap;">${nameHtml}</div>
       <div style="font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#4d4d4c;margin-top:10px;letter-spacing:0.22em;text-transform:uppercase;">${m.role}</div>
       <div style="height:18px;line-height:18px;font-size:0;">&nbsp;</div>
       <div style="font-size:13px;line-height:1.7;color:#1a1a1a;">
@@ -330,15 +330,18 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   //   fonctionne sur <table>). Outlook Desktop ignore border-radius : coins carrés
   //   mais couleur/épaisseur préservés — acceptable.
   // Mode par défaut : ligne #ece6e0 en top pour séparer du corps du mail (comportement historique).
-  const outerStyle = framed
-    ? `border-collapse:separate;border-spacing:0;mso-table-lspace:0pt;mso-table-rspace:0pt;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${WHITE_STYLE}border:1.5px solid ${accent};border-radius:14px;overflow:hidden;color-scheme:light only;supported-color-schemes:light only;`
-    : `border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;`;
-  const outerTdStyle = framed
-    ? `padding:26px 30px;${WHITE_STYLE}`
-    : `padding:20px 0 0;border-top:1px solid #ece6e0;${WHITE_STYLE}`;
+  if (framed) {
+    // Wrapper <div> porte le border + border-radius + overflow (fiable Apple Mail).
+    // Outlook Desktop ignore border-radius (coins carrés) mais garde border color/épaisseur.
+    return `<div style="width:${OUTER_WIDTH}px;max-width:100%;margin-top:24px;${WHITE_STYLE}border:1.5px solid ${accent};border-radius:14px;overflow:hidden;box-sizing:border-box;color-scheme:light only;supported-color-schemes:light only;">
+  <table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${SIG_WIDTH}" ${WHITE_CELL} style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;width:${SIG_WIDTH}px;${WHITE_STYLE}margin:0 auto;">
+    <tr><td ${WHITE_CELL} style="padding:26px 30px;${WHITE_STYLE}">${inner}</td></tr>
+  </table>
+</div>`;
+  }
 
-  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${OUTER_WIDTH}" ${WHITE_CELL} style="${outerStyle}">
-  <tr><td ${WHITE_CELL} style="${outerTdStyle}">${inner}</td></tr>
+  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${OUTER_WIDTH}" ${WHITE_CELL} style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;">
+  <tr><td ${WHITE_CELL} style="padding:20px 0 0;border-top:1px solid #ece6e0;${WHITE_STYLE}">${inner}</td></tr>
 </table>`;
 }
 
