@@ -20,7 +20,8 @@ const BRANDS = {
     reviewUrl: 'https://g.page/r/CeobGah7TNL3EBM/review',
     reviewMsg: 'Vous aimez travailler avec nous — Partagez votre expérience',
     accent: '#C06D80', accentPale: '#F6C9D0',
-    logoFile: 'logo-tdn.svg', logoWidth: 160, labels: true
+    logoFile: 'logo-tdn.svg', logoWidth: 160, labels: true,
+    logoTargetH: 156 // KP*1.30 pour compenser le logo TDN wide horizontal
   },
   KP: {
     id: 'KP', name: 'Karré Production',
@@ -29,7 +30,8 @@ const BRANDS = {
     reviewUrl: 'https://g.page/r/CVx3cb3BazfdEBM/review',
     reviewMsg: 'Vous aimez travailler avec nous — Partagez votre expérience',
     accent: '#EC6908', accentPale: '#FBD8B8',
-    logoFile: 'logo_kp_fixed.svg', logoWidth: 135, labels: true
+    logoFile: 'logo_kp_fixed.svg', logoWidth: 135, labels: true,
+    logoTargetH: 120 // baseline
   },
   PS: {
     id: 'PS', name: 'Piano Service',
@@ -38,7 +40,8 @@ const BRANDS = {
     reviewUrl: 'https://g.page/r/CbqoLnVueb81EBM/review',
     reviewMsg: 'Vous aimez travailler avec nous — Partagez votre expérience',
     accent: '#E20E18', accentPale: '#F8C7CA',
-    logoFile: 'LOGO-COMPLET-PS_fixed.svg', logoWidth: 210, labels: false
+    logoFile: 'LOGO-COMPLET-PS_fixed.svg', logoWidth: 210, labels: false,
+    logoTargetH: 126 // KP*1.05
   }
 };
 
@@ -584,9 +587,9 @@ async function readAssetDims() {
     const brand = BRANDS[m.brand];
     let variants;
     if (m.framed !== false) {
-      // Mode framed (default) : logo à 120px.
+      // Mode framed (default) : hauteur logo définie par brand.logoTargetH.
       variants = [
-        { label: null, sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges, 120) },
+        { label: null, sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges, brand.logoTargetH) },
       ];
     } else {
       variants = [{ label: null, sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges) }];
