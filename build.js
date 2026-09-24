@@ -31,7 +31,8 @@ const BRANDS = {
     reviewMsg: 'Vous aimez travailler avec nous — Partagez votre expérience',
     accent: '#EC6908', accentPale: '#FBD8B8',
     logoFile: 'logo_kp_fixed.svg', logoWidth: 135, labels: true,
-    logoTargetH: 120 // baseline
+    logoTargetH: 120, // baseline
+    theme: 'light' // fond blanc + texte foncé (test avant généralisation)
   },
   PS: {
     id: 'PS', name: 'Piano Service',
@@ -274,9 +275,15 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   // Fond noir posé aussi en image : les modes sombres (Outlook Mac, Apple Mail)
   // recolorent les couleurs de fond mais pas les images. bgcolor en secours
   // si les images sont bloquées.
-  const BG_IMG = `${BASE_URL}/assets/bg-black.png`;
-  const BG_CELL = `bgcolor="#0a0a0a" background="${BG_IMG}"`;
-  const BG_STYLE = `background-color:#0a0a0a;background-image:url('${BG_IMG}');background-repeat:repeat;`;
+  // Thème par marque : 'light' = fond blanc + texte foncé, sinon fond noir + texte clair.
+  const light = brand.theme === 'light';
+  const BG_HEX = light ? '#ffffff' : '#0a0a0a';
+  const BG_IMG = `${BASE_URL}/assets/${light ? 'bg-white' : 'bg-black'}.png`;
+  const BG_CELL = `bgcolor="${BG_HEX}" background="${BG_IMG}"`;
+  const BG_STYLE = `background-color:${BG_HEX};background-image:url('${BG_IMG}');background-repeat:repeat;`;
+  const TXT = light ? '#1a1a1a' : '#f2f2f2';
+  const TXT_NAME = light ? '#0a0a0a' : '#ffffff';
+  const TXT_ROLE = light ? '#4d4d4c' : '#b3b3b3';
 
   // Photo : PNG circulaire pre-rendu (coins transparents) — pas besoin de
   // border-radius. Outlook desktop ignore border-radius mais affichera le
@@ -287,7 +294,7 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
 
   // Nom : si prénom seul (Justine), pas de <span> vide qui laisserait un espace.
   const nameHtml = hasLastName
-    ? `${firstName} <span style="font-weight:300;color:#f2f2f2;">${lastName}</span>`
+    ? `${firstName} <span style="font-weight:300;color:${TXT};">${lastName}</span>`
     : firstName;
 
   // Séparateur vertical : cellule 1px bgcolor accent. Bat border-right qui
@@ -303,17 +310,17 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
     ? `<tr><td colspan="${NCOLS}" ${BG_CELL} style="padding:14px 0;${framed ? '' : `border-top:1px solid ${accentPale};border-bottom:1px solid ${accentPale};`}${BG_STYLE}">${labelsStripHtml(badges)}</td></tr>`
     : `<tr><td colspan="${NCOLS}" ${BG_CELL} style="padding:0;${framed ? '' : `border-top:1px solid ${accentPale};`}${BG_STYLE}">&nbsp;</td></tr>`;
 
-  const inner = `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${SIG_WIDTH}" ${BG_CELL} style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;font-family:Helvetica,Arial,sans-serif;color:#f2f2f2;font-size:14px;line-height:1.45;width:${SIG_WIDTH}px;min-width:${SIG_WIDTH}px;table-layout:fixed;${BG_STYLE}color-scheme:light only;supported-color-schemes:light only;">
+  const inner = `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${SIG_WIDTH}" ${BG_CELL} style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;font-family:Helvetica,Arial,sans-serif;color:${TXT};font-size:14px;line-height:1.45;width:${SIG_WIDTH}px;min-width:${SIG_WIDTH}px;table-layout:fixed;${BG_STYLE}color-scheme:light only;supported-color-schemes:light only;">
   <tr>
     ${photoBlock}
     <td valign="top" ${BG_CELL} style="padding:0;${BG_STYLE}">
-      <div style="font-family:${titleFamily};font-size:24px;line-height:1.1;color:#ffffff;font-weight:400;letter-spacing:0.01em;white-space:nowrap;">${nameHtml}</div>
-      <div style="font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#b3b3b3;margin-top:10px;letter-spacing:0.12em;text-transform:uppercase;white-space:nowrap;">${m.role}</div>
+      <div style="font-family:${titleFamily};font-size:24px;line-height:1.1;color:${TXT_NAME};font-weight:400;letter-spacing:0.01em;white-space:nowrap;">${nameHtml}</div>
+      <div style="font-family:Helvetica,Arial,sans-serif;font-size:11px;color:${TXT_ROLE};margin-top:10px;letter-spacing:0.12em;text-transform:uppercase;white-space:nowrap;">${m.role}</div>
       <div style="height:18px;line-height:18px;font-size:0;">&nbsp;</div>
-      <div style="font-size:13px;line-height:1.7;color:#f2f2f2;white-space:nowrap;">
-        <a href="mailto:${m.email}" style="color:#f2f2f2;text-decoration:none;border-bottom:1px solid ${accentPale};">${m.email}</a><br/>
-        <a href="tel:${m.tel.replace(/\s/g,'')}" style="color:#f2f2f2;text-decoration:none;">${m.tel}</a><br/>
-        <a href="${brand.siteUrl}" style="color:#f2f2f2;text-decoration:none;font-weight:600;">${brand.site}</a> · <a href="${brand.linkedin}" style="color:#f2f2f2;text-decoration:none;font-weight:600;">LinkedIn</a>
+      <div style="font-size:13px;line-height:1.7;color:${TXT};white-space:nowrap;">
+        <a href="mailto:${m.email}" style="color:${TXT};text-decoration:none;border-bottom:1px solid ${accentPale};">${m.email}</a><br/>
+        <a href="tel:${m.tel.replace(/\s/g,'')}" style="color:${TXT};text-decoration:none;">${m.tel}</a><br/>
+        <a href="${brand.siteUrl}" style="color:${TXT};text-decoration:none;font-weight:600;">${brand.site}</a> · <a href="${brand.linkedin}" style="color:${TXT};text-decoration:none;font-weight:600;">LinkedIn</a>
       </div>
     </td>
     ${separatorCell}
@@ -325,8 +332,8 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   ${labelsRow}
   <tr>
     <td colspan="${NCOLS}" ${BG_CELL} style="padding:14px 0 0;${BG_STYLE}">
-      <span style="font-family:${titleFamily};font-weight:300;font-size:10px;color:#f2f2f2;letter-spacing:0.01em;">«&nbsp;${brand.reviewMsg}&nbsp;»</span>
-      <a href="${brand.reviewUrl}" style="font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#f2f2f2;text-decoration:none;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border-bottom:2px solid ${accentPale};padding-bottom:2px;margin-left:8px;">→ Laissez votre avis</a>
+      <span style="font-family:${titleFamily};font-weight:300;font-size:10px;color:${TXT};letter-spacing:0.01em;">«&nbsp;${brand.reviewMsg}&nbsp;»</span>
+      <a href="${brand.reviewUrl}" style="font-family:Helvetica,Arial,sans-serif;font-size:11px;color:${TXT};text-decoration:none;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border-bottom:2px solid ${accentPale};padding-bottom:2px;margin-left:8px;">→ Laissez votre avis</a>
     </td>
   </tr>
 </table>`;
