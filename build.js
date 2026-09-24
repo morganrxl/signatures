@@ -52,7 +52,7 @@ const PHOTO_MAP = {
 
 // ----- MEMBERS -----
 const MEMBERS = [
-  { id: 'yann',      brand: 'KP',  nom: 'Yann ROUXEL',      role: 'Directeur Général',                       email: 'yann@karreprod.com',        tel: '+33 6 27 42 78 20', photoId: 'yann', framed: true },
+  { id: 'yann',      brand: 'KP',  nom: 'Yann ROUXEL',      role: 'Directeur Général',                       email: 'yann@karreprod.com',        tel: '+33 6 27 42 78 20', photoId: 'yann' },
   { id: 'jacques',   brand: 'KP',  nom: 'Jacques KLOPOCKI', role: 'Directeur Associé',                       email: 'jacques@karreprod.com',     tel: '+33 6 24 18 51 44', photoId: 'jacques' },
   { id: 'clement',   brand: 'KP',  nom: 'Clément LE FUR',   role: 'Directeur Technique',                     email: 'clement@karreprod.com',     tel: '+33 6 78 56 38 68', photoId: 'clement' },
   { id: 'florian',   brand: 'KP',  nom: 'Florian LE FUR',   role: 'Directeur Technique',                     email: 'florian@karreprod.com',     tel: '+33 6 08 07 18 19', photoId: 'florian' },
@@ -257,7 +257,8 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   // framed : cadre arrondi couleur brand autour du bloc, sans lignes internes
   // (séparateur vertical + bordures strip labels supprimés). Underlines des
   // <a> conservés (email + review) car portés par les liens eux-mêmes.
-  const framed = m.framed === true;
+  // Default : true (toutes les signatures utilisent le cadre). Opt-out avec framed:false.
+  const framed = m.framed !== false;
   const NCOLS = 2 + (hasPhoto ? 1 : 0) + (framed ? 0 : 1); // photo? | texte | (sep si !framed) | logo
   const OUTER_WIDTH = framed ? SIG_WIDTH + 60 : SIG_WIDTH; // +60 = 4px border + 2x28px padding interne
   const hasLastName = lastName.length > 0;
@@ -584,8 +585,8 @@ async function readAssetDims() {
   for (const m of MEMBERS) {
     const brand = BRANDS[m.brand];
     let variants;
-    if (m.framed === true) {
-      // Mode framed : logo à 120px (V3 validée).
+    if (m.framed !== false) {
+      // Mode framed (default) : logo à 120px.
       variants = [
         { label: null, sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges, 120) },
       ];
