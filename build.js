@@ -269,8 +269,10 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   // Fond blanc CUIT sur chaque cellule : bgcolor + background-color inline.
   // Gmail Android + Outlook Windows dark mode ne peuvent plus inverser le fond
   // -> les couleurs texte (#1a1a1a) restent lisibles sur blanc partout.
-  const WHITE_CELL = 'bgcolor="#ffffff"';
-  const WHITE_STYLE = 'background-color:#ffffff;';
+  // Faux blanc #fefefe : les clients mail traitent #ffffff comme le fond par
+  // défaut et le retirent / l'inversent ; un blanc quasi pur est conservé.
+  const WHITE_CELL = 'bgcolor="#fefefe"';
+  const WHITE_STYLE = 'background-color:#fefefe;';
 
   // Photo : PNG circulaire pre-rendu (coins transparents) — pas besoin de
   // border-radius. Outlook desktop ignore border-radius mais affichera le
