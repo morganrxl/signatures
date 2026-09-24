@@ -228,23 +228,21 @@ function labelsStripHtml(badges, gap = 18) {
   return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;"><tr>${items.map((it, i) => `<td valign="middle" style="padding:0 ${i === items.length - 1 ? 0 : gap}px 0 0;"><img src="${it.src}" width="${it.w}" height="${it.h}" alt="${it.alt}" style="${lockedImgStyle(it.w, it.h)}" /></td>`).join('')}</tr></table>`;
 }
 
-function buildEditorial(m, brand, logoDims, badges, logoScaleFactor = 1) {
+function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   const { accent, accentPale } = brand;
   const photoUrl = `${BASE_URL}/assets/photo-${m.photoId}.png`;
   const logoUrl = `${BASE_URL}/assets/logo-${brand.id.toLowerCase()}.png`;
-  // Cap logo en mode framed. logoScaleFactor permet de tester plusieurs tailles
-  // (V1 = 96px = taille photo, V2 = 192px pour combler l'espace vide sous le logo).
+  // Cap logo en mode framed sur logoTargetPx (côté le plus long).
   // Aspect ratio préservé. Le PNG est rendu à 2x donc reste net après downscale HTML.
   let logoH = logoDims.height;
   let logoW = logoDims.width;
   if (m.framed === true) {
-    const LOGO_TARGET = 96 * logoScaleFactor;
     if (logoW >= logoH) {
-      logoH = Math.round(LOGO_TARGET * logoDims.height / logoDims.width);
-      logoW = LOGO_TARGET;
+      logoH = Math.round(logoTargetPx * logoDims.height / logoDims.width);
+      logoW = logoTargetPx;
     } else {
-      logoW = Math.round(LOGO_TARGET * logoDims.width / logoDims.height);
-      logoH = LOGO_TARGET;
+      logoW = Math.round(logoTargetPx * logoDims.width / logoDims.height);
+      logoH = logoTargetPx;
     }
   }
   const firstName = m.nom.split(' ')[0];
@@ -586,8 +584,8 @@ async function readAssetDims() {
     if (m.framed === true) {
       // Mode framed : 2 versions à comparer pour valider la taille du logo.
       variants = [
-        { label: 'Version 1 · logo taille photo (96px)', sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges, 1) },
-        { label: 'Version 2 · logo x2 (192px)',           sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges, 2) },
+        { label: 'Version 1 · logo taille photo (96px)', sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges, 96) },
+        { label: 'Version 2 · logo grand (150px)',       sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges, 150) },
       ];
     } else {
       variants = [{ label: null, sig: buildEditorial(m, brand, dimsByBrand[m.brand], badges) }];
