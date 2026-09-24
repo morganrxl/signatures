@@ -237,18 +237,16 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   // <a> conservés (email + review) car portés par les liens eux-mêmes.
   // Default : true (toutes les signatures utilisent le cadre). Opt-out avec framed:false.
   const framed = m.framed !== false;
-  // Cap logo en mode framed sur logoTargetPx (côté le plus long).
-  // Aspect ratio préservé. Le PNG est rendu à 2x donc reste net après downscale HTML.
+  // Cap logo en mode framed sur logoTargetPx (HAUTEUR fixe) pour harmoniser
+  // la hauteur des logos entre les 3 marques. La largeur suit l'aspect ratio.
+  // Attention : TDN (aspect 2.58) devient très wide (~310px à H=120), peut
+  // écraser la text cell si SIG_WIDTH pas assez large.
+  // Le PNG est rendu à 2x donc reste net après downscale HTML.
   let logoH = logoDims.height;
   let logoW = logoDims.width;
   if (framed) {
-    if (logoW >= logoH) {
-      logoH = Math.round(logoTargetPx * logoDims.height / logoDims.width);
-      logoW = logoTargetPx;
-    } else {
-      logoW = Math.round(logoTargetPx * logoDims.width / logoDims.height);
-      logoH = logoTargetPx;
-    }
+    logoW = Math.round(logoTargetPx * logoDims.width / logoDims.height);
+    logoH = logoTargetPx;
   }
   const firstName = m.nom.split(' ')[0];
   const lastName = m.nom.split(' ').slice(1).join(' ');
