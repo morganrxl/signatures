@@ -52,7 +52,7 @@ const PHOTO_MAP = {
 
 // ----- MEMBERS -----
 const MEMBERS = [
-  { id: 'yann',      brand: 'KP',  nom: 'Yann ROUXEL',      role: 'Directeur Général',                       email: 'yann@karreprod.com',        tel: '+33 6 27 42 78 20', photoId: 'yann' },
+  { id: 'yann',      brand: 'KP',  nom: 'Yann ROUXEL',      role: 'Directeur Général',                       email: 'yann@karreprod.com',        tel: '+33 6 27 42 78 20', photoId: 'yann', framed: true },
   { id: 'jacques',   brand: 'KP',  nom: 'Jacques KLOPOCKI', role: 'Directeur Associé',                       email: 'jacques@karreprod.com',     tel: '+33 6 24 18 51 44', photoId: 'jacques' },
   { id: 'clement',   brand: 'KP',  nom: 'Clément LE FUR',   role: 'Directeur Technique',                     email: 'clement@karreprod.com',     tel: '+33 6 78 56 38 68', photoId: 'clement' },
   { id: 'florian',   brand: 'KP',  nom: 'Florian LE FUR',   role: 'Directeur Technique',                     email: 'florian@karreprod.com',     tel: '+33 6 08 07 18 19', photoId: 'florian' },
@@ -243,7 +243,12 @@ function buildEditorial(m, brand, logoDims, badges) {
   // gardent leur taille (pas de redistribution proportionnelle des cellules).
   const SIG_WIDTH = 620;
   const hasPhoto = m.photo !== false;
-  const NCOLS = hasPhoto ? 4 : 3; // photo? | texte | separateur | logo
+  // framed : cadre arrondi couleur brand autour du bloc, sans lignes internes
+  // (séparateur vertical + bordures strip labels supprimés). Underlines des
+  // <a> conservés (email + review) car portés par les liens eux-mêmes.
+  const framed = m.framed === true;
+  const NCOLS = 2 + (hasPhoto ? 1 : 0) + (framed ? 0 : 1); // photo? | texte | (sep si !framed) | logo
+  const OUTER_WIDTH = framed ? SIG_WIDTH + 60 : SIG_WIDTH; // +60 = 4px border + 2x28px padding interne
   const hasLastName = lastName.length > 0;
 
   // Fond blanc CUIT sur chaque cellule : bgcolor + background-color inline.
@@ -267,11 +272,15 @@ function buildEditorial(m, brand, logoDims, badges) {
   // Séparateur vertical : cellule 1px bgcolor accent. Bat border-right qui
   // se comporte de façon erratique dans Outlook Desktop (moteur Word) :
   // hauteur incohérente, gap 1px, disparition selon zoom.
-  const separatorCell = `<td width="1" bgcolor="${accent}" style="width:1px;min-width:1px;max-width:1px;background-color:${accent};line-height:1px;font-size:0;">&nbsp;</td>`;
+  // En mode framed, on retire ce séparateur : le cadre extérieur porte la couleur brand.
+  const separatorCell = framed
+    ? ''
+    : `<td width="1" bgcolor="${accent}" style="width:1px;min-width:1px;max-width:1px;background-color:${accent};line-height:1px;font-size:0;">&nbsp;</td>`;
 
+  // En mode framed, on retire les bordures haut/bas de la strip labels.
   const labelsRow = brand.labels
-    ? `<tr><td colspan="${NCOLS}" ${WHITE_CELL} style="padding:14px 0;border-top:1px solid ${accentPale};border-bottom:1px solid ${accentPale};${WHITE_STYLE}">${labelsStripHtml(badges)}</td></tr>`
-    : `<tr><td colspan="${NCOLS}" ${WHITE_CELL} style="padding:0;border-top:1px solid ${accentPale};${WHITE_STYLE}">&nbsp;</td></tr>`;
+    ? `<tr><td colspan="${NCOLS}" ${WHITE_CELL} style="padding:14px 0;${framed ? '' : `border-top:1px solid ${accentPale};border-bottom:1px solid ${accentPale};`}${WHITE_STYLE}">${labelsStripHtml(badges)}</td></tr>`
+    : `<tr><td colspan="${NCOLS}" ${WHITE_CELL} style="padding:0;${framed ? '' : `border-top:1px solid ${accentPale};`}${WHITE_STYLE}">&nbsp;</td></tr>`;
 
   const inner = `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${SIG_WIDTH}" ${WHITE_CELL} style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:14px;line-height:1.45;width:${SIG_WIDTH}px;min-width:${SIG_WIDTH}px;table-layout:fixed;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;">
   <tr>
@@ -301,10 +310,21 @@ function buildEditorial(m, brand, logoDims, badges) {
   </tr>
 </table>`;
 
-  // Wrapper extérieur : crée une séparation nette avec le contenu du mail
-  // (corps de réponse ou quote) sur mobile + largeur fixe verrouillée.
-  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${SIG_WIDTH}" ${WHITE_CELL} style="border-collapse:collapse;width:${SIG_WIDTH}px;min-width:${SIG_WIDTH}px;margin-top:24px;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;">
-  <tr><td ${WHITE_CELL} style="padding:20px 0 0;border-top:1px solid #ece6e0;${WHITE_STYLE}">${inner}</td></tr>
+  // Wrapper extérieur.
+  // Mode framed : cadre 2px couleur brand + border-radius:14px + padding interne
+  //   (border-collapse:separate + border-spacing:0 requis pour que border-radius
+  //   fonctionne sur <table>). Outlook Desktop ignore border-radius : coins carrés
+  //   mais couleur/épaisseur préservés — acceptable.
+  // Mode par défaut : ligne #ece6e0 en top pour séparer du corps du mail (comportement historique).
+  const outerStyle = framed
+    ? `border-collapse:separate;border-spacing:0;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${WHITE_STYLE}border:2px solid ${accent};border-radius:14px;overflow:hidden;color-scheme:light only;supported-color-schemes:light only;`
+    : `border-collapse:collapse;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;`;
+  const outerTdStyle = framed
+    ? `padding:26px 30px;${WHITE_STYLE}`
+    : `padding:20px 0 0;border-top:1px solid #ece6e0;${WHITE_STYLE}`;
+
+  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${OUTER_WIDTH}" ${WHITE_CELL} style="${outerStyle}">
+  <tr><td ${WHITE_CELL} style="${outerTdStyle}">${inner}</td></tr>
 </table>`;
 }
 
