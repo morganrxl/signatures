@@ -21,7 +21,7 @@ const BRANDS = {
     reviewMsg: 'Vous aimez travailler avec nous — Partagez votre expérience',
     accent: '#C06D80', accentPale: '#F6C9D0',
     logoFile: 'logo-tdn.svg', logoWidth: 160, labels: true,
-    logoTargetH: 156 // KP*1.30 pour compenser le logo TDN wide horizontal
+    logoTargetH: 140 // 156 * 0.9 (compense wide horizontal, -10% du max testé)
   },
   KP: {
     id: 'KP', name: 'Karré Production',
@@ -41,7 +41,7 @@ const BRANDS = {
     reviewMsg: 'Vous aimez travailler avec nous — Partagez votre expérience',
     accent: '#E20E18', accentPale: '#F8C7CA',
     logoFile: 'LOGO-COMPLET-PS_fixed.svg', logoWidth: 210, labels: false,
-    logoTargetH: 126 // KP*1.05
+    logoTargetH: 122 // 126 * 0.97
   }
 };
 
