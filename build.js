@@ -350,8 +350,13 @@ function wrapStandalone(variants, title) {
   const labelStyle = "font-family:'Avenir Next','Avenir',Helvetica,Arial,sans-serif;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;margin:0 0 12px;font-weight:600;";
   const variantLabelStyle = "font-family:'Avenir Next','Avenir',Helvetica,Arial,sans-serif;font-size:14px;letter-spacing:0.02em;margin:24px 0 12px;font-weight:600;";
 
-  const buildSection = (bg, textColor, subLabelColor, isFirst) => {
-    const bgLabel = bg === '#ffffff' ? 'fond clair' : 'fond sombre';
+  const buildSection = (isLight, isFirst) => {
+    const bgStyle = isLight
+      ? 'background:rgba(255,255,255,0.55);backdrop-filter:blur(28px) saturate(140%);-webkit-backdrop-filter:blur(28px) saturate(140%);'
+      : 'background:#0a0a0a;';
+    const textColor = isLight ? '#333' : '#bbb';
+    const subLabelColor = isLight ? '#1a1a1a' : '#fff';
+    const bgLabel = isLight ? 'fond clair (glassy)' : 'fond sombre';
     const variantsHtml = variants.map((v, i) => {
       const marker = isFirst && i === 0;
       return `${v.label ? `<p style="${variantLabelStyle}color:${subLabelColor};">${v.label}</p>` : ''}
@@ -359,7 +364,7 @@ ${marker ? '<!-- SIG:START -->' : ''}
 ${v.sig}
 ${marker ? '<!-- SIG:END -->' : ''}`;
     }).join('\n');
-    return `<section style="padding:32px 24px;background:${bg};">
+    return `<section style="padding:32px 24px;${bgStyle}">
   <div style="max-width:840px;margin:0 auto;">
     <p style="${labelStyle}color:${textColor};">Aperçu — ${bgLabel}</p>
 ${variantsHtml}
@@ -367,6 +372,9 @@ ${variantsHtml}
 </section>`;
   };
 
+  // Gradient body (aperçu uniquement) : les 3 couleurs pale accent des 3 marques
+  // fournissent un backdrop coloré rendu visible par le blur de la section glassy.
+  // color-scheme:light only reste posé au niveau du wrap standalone pour l'export mail.
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -380,9 +388,9 @@ ${variantsHtml}
   body { color-scheme: light only; }
 </style>
 </head>
-<body style="margin:0;padding:0;background:#fbf9f7;font-family:Helvetica,Arial,sans-serif;color-scheme:light only;">
-${buildSection('#ffffff', '#666', '#1a1a1a', true)}
-${buildSection('#0a0a0a', '#bbb', '#fff', false)}
+<body style="margin:0;padding:0;background:linear-gradient(135deg,#FBD8B8 0%,#F6C9D0 50%,#F8C7CA 100%);font-family:Helvetica,Arial,sans-serif;color-scheme:light only;">
+${buildSection(true, true)}
+${buildSection(false, false)}
 </body></html>`;
 }
 
