@@ -331,11 +331,14 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   //   mais couleur/épaisseur préservés — acceptable.
   // Mode par défaut : ligne #ece6e0 en top pour séparer du corps du mail (comportement historique).
   if (framed) {
-    // Structure : un seul <div> wrapper qui porte border + radius + overflow + padding.
-    // Fiable dans Apple Mail (border-radius sur div ok), Gmail (padding sur div ok).
-    // Outlook Desktop ignore border-radius (coins carrés) mais garde border et padding.
-    // width = SIG_WIDTH + 2x padding + 2x border pour que inner (620) rentre pile.
-    return `<div style="width:${OUTER_WIDTH}px;max-width:100%;margin-top:24px;box-sizing:border-box;padding:26px 30px;${WHITE_STYLE}border:2px solid ${accent};border-radius:14px;overflow:hidden;color-scheme:light only;supported-color-schemes:light only;">${inner}</div>`;
+    // Table sans largeur fixe : elle prend la taille réelle du contenu, donc la
+    // bordure l'entoure toujours (une largeur fixe se faisait recouvrir à droite
+    // quand Apple Mail rendait le contenu plus large que prévu).
+    // Bordure + arrondi sur la cellule (border-radius sur td : Apple Mail, Gmail ok ;
+    // Outlook Desktop affiche des coins carrés).
+    return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:separate;border-spacing:0;mso-table-lspace:0pt;mso-table-rspace:0pt;margin-top:24px;color-scheme:light only;supported-color-schemes:light only;">
+  <tr><td ${WHITE_CELL} style="padding:26px 30px;${WHITE_STYLE}border:2px solid ${accent};border-radius:14px;">${inner}</td></tr>
+</table>`;
   }
 
   return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${OUTER_WIDTH}" ${WHITE_CELL} style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;">
