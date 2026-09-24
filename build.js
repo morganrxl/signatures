@@ -311,7 +311,7 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
     </td>
     ${separatorCell}
     <td valign="${framed ? 'top' : 'middle'}" align="center" ${WHITE_CELL} style="padding:0 0 0 26px;width:${logoW + 10}px;min-width:${logoW + 10}px;text-align:center;${WHITE_STYLE}mso-line-height-rule:exactly;">
-      <img src="${logoUrl}" width="${logoW}" height="${logoH}" alt="${brand.name}" style="${lockedImgStyle(logoW, logoH, 'margin:0 auto;background-color:#ffffff;')}" />
+      <img src="${logoUrl}" width="${logoW}" height="${logoH}" alt="${brand.name}" style="${lockedImgStyle(logoW, logoH, 'margin:0 auto;')}" />
     </td>
   </tr>
   <tr><td colspan="${NCOLS}" ${WHITE_CELL} style="height:18px;line-height:18px;font-size:0;${WHITE_STYLE}">&nbsp;</td></tr>
