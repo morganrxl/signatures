@@ -271,8 +271,8 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   // -> les couleurs texte (#1a1a1a) restent lisibles sur blanc partout.
   // Faux blanc #fefefe : les clients mail traitent #ffffff comme le fond par
   // défaut et le retirent / l'inversent ; un blanc quasi pur est conservé.
-  const WHITE_CELL = 'bgcolor="#fefefe"';
-  const WHITE_STYLE = 'background-color:#fefefe;';
+  const WHITE_CELL = 'bgcolor="#e5e5e5"';
+  const WHITE_STYLE = 'background-color:#e5e5e5;';
 
   // Photo : PNG circulaire pre-rendu (coins transparents) — pas besoin de
   // border-radius. Outlook desktop ignore border-radius mais affichera le
