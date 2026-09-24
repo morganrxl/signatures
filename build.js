@@ -232,11 +232,16 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   const { accent, accentPale } = brand;
   const photoUrl = `${BASE_URL}/assets/photo-${m.photoId}.png`;
   const logoUrl = `${BASE_URL}/assets/logo-${brand.id.toLowerCase()}.png`;
+  // framed : cadre arrondi couleur brand autour du bloc, sans lignes internes
+  // (séparateur vertical + bordures strip labels supprimés). Underlines des
+  // <a> conservés (email + review) car portés par les liens eux-mêmes.
+  // Default : true (toutes les signatures utilisent le cadre). Opt-out avec framed:false.
+  const framed = m.framed !== false;
   // Cap logo en mode framed sur logoTargetPx (côté le plus long).
   // Aspect ratio préservé. Le PNG est rendu à 2x donc reste net après downscale HTML.
   let logoH = logoDims.height;
   let logoW = logoDims.width;
-  if (m.framed === true) {
+  if (framed) {
     if (logoW >= logoH) {
       logoH = Math.round(logoTargetPx * logoDims.height / logoDims.width);
       logoW = logoTargetPx;
@@ -254,11 +259,6 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   // gardent leur taille (pas de redistribution proportionnelle des cellules).
   const SIG_WIDTH = 620;
   const hasPhoto = m.photo !== false;
-  // framed : cadre arrondi couleur brand autour du bloc, sans lignes internes
-  // (séparateur vertical + bordures strip labels supprimés). Underlines des
-  // <a> conservés (email + review) car portés par les liens eux-mêmes.
-  // Default : true (toutes les signatures utilisent le cadre). Opt-out avec framed:false.
-  const framed = m.framed !== false;
   const NCOLS = 2 + (hasPhoto ? 1 : 0) + (framed ? 0 : 1); // photo? | texte | (sep si !framed) | logo
   const OUTER_WIDTH = framed ? SIG_WIDTH + 60 : SIG_WIDTH; // +60 = 4px border + 2x28px padding interne
   const hasLastName = lastName.length > 0;
