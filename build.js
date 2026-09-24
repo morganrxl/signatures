@@ -215,8 +215,9 @@ async function buildBadges() {
 
 // Style image verrouillé : empêche tout client mail (Gmail iOS, Outlook mobile…)
 // de redimensionner / déformer l'image. !important bat les CSS injectées par le client.
+// -ms-interpolation-mode:bicubic pour un rendu propre au zoom Outlook Desktop.
 function lockedImgStyle(w, h, extra = '') {
-  return `display:block;border:0;outline:0;text-decoration:none;`
+  return `display:block;border:0;outline:0;text-decoration:none;-ms-interpolation-mode:bicubic;`
        + `width:${w}px !important;height:${h}px !important;`
        + `min-width:${w}px;max-width:${w}px;min-height:${h}px;max-height:${h}px;`
        + extra;
@@ -274,7 +275,7 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   // border-radius. Outlook desktop ignore border-radius mais affichera le
   // rond car le PNG EST rond. Skippé si m.photo === false (ex: Justine).
   const photoBlock = hasPhoto
-    ? `<td valign="top" ${WHITE_CELL} style="padding:0 26px 0 0;width:108px;min-width:108px;${WHITE_STYLE}"><img src="${photoUrl}" width="96" height="96" alt="${m.nom}" style="${lockedImgStyle(96, 96, 'border-radius:96px;')}" /></td>`
+    ? `<td valign="top" ${WHITE_CELL} style="padding:0 26px 0 0;width:108px;min-width:108px;${WHITE_STYLE}mso-line-height-rule:exactly;"><img src="${photoUrl}" width="96" height="96" alt="${m.nom}" style="${lockedImgStyle(96, 96, 'border-radius:96px;')}" /></td>`
     : '';
 
   // Nom : si prénom seul (Justine), pas de <span> vide qui laisserait un espace.
@@ -295,7 +296,7 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
     ? `<tr><td colspan="${NCOLS}" ${WHITE_CELL} style="padding:14px 0;${framed ? '' : `border-top:1px solid ${accentPale};border-bottom:1px solid ${accentPale};`}${WHITE_STYLE}">${labelsStripHtml(badges)}</td></tr>`
     : `<tr><td colspan="${NCOLS}" ${WHITE_CELL} style="padding:0;${framed ? '' : `border-top:1px solid ${accentPale};`}${WHITE_STYLE}">&nbsp;</td></tr>`;
 
-  const inner = `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${SIG_WIDTH}" ${WHITE_CELL} style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:14px;line-height:1.45;width:${SIG_WIDTH}px;min-width:${SIG_WIDTH}px;table-layout:fixed;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;">
+  const inner = `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="${SIG_WIDTH}" ${WHITE_CELL} style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:14px;line-height:1.45;width:${SIG_WIDTH}px;min-width:${SIG_WIDTH}px;table-layout:fixed;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;">
   <tr>
     ${photoBlock}
     <td valign="top" ${WHITE_CELL} style="padding:0 30px 0 0;${WHITE_STYLE}">
@@ -330,8 +331,8 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   //   mais couleur/épaisseur préservés — acceptable.
   // Mode par défaut : ligne #ece6e0 en top pour séparer du corps du mail (comportement historique).
   const outerStyle = framed
-    ? `border-collapse:separate;border-spacing:0;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${WHITE_STYLE}border:1.5px solid ${accent};border-radius:14px;overflow:hidden;color-scheme:light only;supported-color-schemes:light only;`
-    : `border-collapse:collapse;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;`;
+    ? `border-collapse:separate;border-spacing:0;mso-table-lspace:0pt;mso-table-rspace:0pt;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${WHITE_STYLE}border:1.5px solid ${accent};border-radius:14px;overflow:hidden;color-scheme:light only;supported-color-schemes:light only;`
+    : `border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;width:${OUTER_WIDTH}px;min-width:${OUTER_WIDTH}px;margin-top:24px;${WHITE_STYLE}color-scheme:light only;supported-color-schemes:light only;`;
   const outerTdStyle = framed
     ? `padding:26px 30px;${WHITE_STYLE}`
     : `padding:20px 0 0;border-top:1px solid #ece6e0;${WHITE_STYLE}`;
