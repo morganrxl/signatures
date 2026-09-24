@@ -271,8 +271,12 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   // -> les couleurs texte (#1a1a1a) restent lisibles sur blanc partout.
   // Fond noir (faux noir #0a0a0a plutôt que #000, que certains clients
   // traitent comme valeur par défaut). Textes en clair, logos en version blanche.
-  const BG_CELL = 'bgcolor="#0a0a0a"';
-  const BG_STYLE = 'background-color:#0a0a0a;';
+  // Fond noir posé aussi en image : les modes sombres (Outlook Mac, Apple Mail)
+  // recolorent les couleurs de fond mais pas les images. bgcolor en secours
+  // si les images sont bloquées.
+  const BG_IMG = `${BASE_URL}/assets/bg-black.png`;
+  const BG_CELL = `bgcolor="#0a0a0a" background="${BG_IMG}"`;
+  const BG_STYLE = `background-color:#0a0a0a;background-image:url('${BG_IMG}');background-repeat:repeat;`;
 
   // Photo : PNG circulaire pre-rendu (coins transparents) — pas besoin de
   // border-radius. Outlook desktop ignore border-radius mais affichera le
