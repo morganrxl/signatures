@@ -21,7 +21,8 @@ const BRANDS = {
     reviewMsg: 'Vous aimez travailler avec nous — Partagez votre expérience',
     accent: '#C06D80', accentPale: '#F6C9D0',
     logoFile: 'logo-tdn.svg', logoWidth: 160, labels: true,
-    logoTargetH: 81 // target W=210
+    theme: 'light',
+    logoTargetH: 83 // target W=210
   },
   KP: {
     id: 'KP', name: 'Karré Production',
@@ -31,7 +32,7 @@ const BRANDS = {
     reviewMsg: 'Vous aimez travailler avec nous — Partagez votre expérience',
     accent: '#EC6908', accentPale: '#FBD8B8',
     logoFile: 'logo_kp_fixed.svg', logoWidth: 135, labels: true,
-    logoTargetH: 120, // baseline
+    logoTargetH: 124, // baseline
     theme: 'light' // fond transparent + texte foncé (test avant généralisation)
   },
   PS: {
@@ -42,7 +43,8 @@ const BRANDS = {
     reviewMsg: 'Vous aimez travailler avec nous — Partagez votre expérience',
     accent: '#E20E18', accentPale: '#F8C7CA',
     logoFile: 'LOGO-COMPLET-PS_fixed.svg', logoWidth: 210, labels: false,
-    logoTargetH: 106 // target W=145
+    theme: 'light',
+    logoTargetH: 109 // target W=145
   }
 };
 
@@ -275,12 +277,14 @@ function buildEditorial(m, brand, logoDims, badges, logoTargetPx = 96) {
   // Fond noir posé aussi en image : les modes sombres (Outlook Mac, Apple Mail)
   // recolorent les couleurs de fond mais pas les images. bgcolor en secours
   // si les images sont bloquées.
-  // Thème par marque : 'light' = fond transparent + texte foncé (le logiciel de
-  // mail adapte lui-même en mode sombre), sinon fond noir (image + bgcolor) + texte clair.
+  // Thème par marque : 'light' = fond blanc + texte foncé, sinon fond noir + texte clair.
+  // Fond posé aussi en image : les modes sombres (Outlook Mac, Apple Mail) recolorent
+  // les couleurs de fond mais pas les images. bgcolor en secours si images bloquées.
   const light = brand.theme === 'light';
-  const BG_IMG = `${BASE_URL}/assets/bg-black.png`;
-  const BG_CELL = light ? '' : `bgcolor="#0a0a0a" background="${BG_IMG}"`;
-  const BG_STYLE = light ? '' : `background-color:#0a0a0a;background-image:url('${BG_IMG}');background-repeat:repeat;`;
+  const BG_HEX = light ? '#ffffff' : '#0a0a0a';
+  const BG_IMG = `${BASE_URL}/assets/${light ? 'bg-white' : 'bg-black'}.png`;
+  const BG_CELL = `bgcolor="${BG_HEX}" background="${BG_IMG}"`;
+  const BG_STYLE = `background-color:${BG_HEX};background-image:url('${BG_IMG}');background-repeat:repeat;`;
   const TXT = light ? '#1a1a1a' : '#f2f2f2';
   const TXT_NAME = light ? '#0a0a0a' : '#ffffff';
   const TXT_ROLE = light ? '#4d4d4c' : '#b3b3b3';
